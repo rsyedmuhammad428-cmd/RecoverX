@@ -1,0 +1,25 @@
+#include <windows.h>
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,2,0,0
+ PRODUCTVERSION 0,2,0,0
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_DLL
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "CompanyName", "RazaZaidi.AI"
+      VALUE "FileDescription", "RecoverX native recovery engine"
+      VALUE "FileVersion", "0.2.0.0"
+      VALUE "InternalName", "recoverx_engine"
+      VALUE "OriginalFilename", "recoverx_engine.dll"
+      VALUE "ProductName", "RecoverX"
+      VALUE "ProductVersion", "0.2.0.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x409, 1200
+  END
+END

@@ -1,0 +1,35 @@
+add_executable(native_tests native_tests.cpp ${RX_TEST_SOURCES})
+target_include_directories(native_tests PRIVATE ${RX_INCLUDE_DIRS})
+target_compile_definitions(native_tests PRIVATE RX_ENGINE_BUILD)
+
+add_executable(ntfs_tests ntfs_tests.cpp ${RX_TEST_SOURCES})
+target_include_directories(ntfs_tests PRIVATE ${RX_INCLUDE_DIRS})
+target_compile_definitions(ntfs_tests PRIVATE RX_ENGINE_BUILD)
+
+if(WIN32)
+  target_compile_definitions(native_tests PRIVATE _WIN32_WINNT=0x0601 WINVER=0x0601 NOMINMAX)
+  target_compile_definitions(ntfs_tests PRIVATE _WIN32_WINNT=0x0601 WINVER=0x0601 NOMINMAX)
+endif()
+if(WIN32 AND NOT MSVC)
+  target_link_options(native_tests PRIVATE -static-libgcc -static-libstdc++ -static)
+  target_link_options(ntfs_tests PRIVATE -static-libgcc -static-libstdc++ -static)
+endif()
+if(MSVC)
+  set_property(TARGET native_tests ntfs_tests PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
+add_test(NAME native_tests COMMAND native_tests)
+
+# Real-NTFS fixture: a 64 MB volume built with the NTFS driver (see tests/fixtures/make_ntfs_fixture.py), unpacked at
+# configure time with CMake's own tar so it works on every OS. Volume tests run on non-Windows hosts.
+set(RX_FIXTURE_SRC ${CMAKE_SOURCE_DIR}/tests/fixtures)
+set(RX_FIXTURE_OUT ${CMAKE_BINARY_DIR}/fixtures)
+if(NOT EXISTS ${RX_FIXTURE_OUT}/ntfs_basic.img)
+  file(MAKE_DIRECTORY ${RX_FIXTURE_OUT})
+  execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${RX_FIXTURE_SRC}/ntfs_basic.tar.gz WORKING_DIRECTORY ${RX_FIXTURE_OUT})
+endif()
+configure_file(${RX_FIXTURE_SRC}/ntfs_basic.manifest.tsv ${RX_FIXTURE_OUT}/ntfs_basic.manifest.tsv COPYONLY)
+target_compile_definitions(ntfs_tests PRIVATE RX_FIXTURE_DIR="${RX_FIXTURE_OUT}")
+set_tests_properties(native_tests PROPERTIES TIMEOUT 120)
+add_test(NAME ntfs_tests COMMAND ntfs_tests)
+set_tests_properties(ntfs_tests PROPERTIES TIMEOUT 900)

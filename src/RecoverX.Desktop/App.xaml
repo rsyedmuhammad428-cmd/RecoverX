@@ -1,0 +1,25 @@
+<Application x:Class="RecoverX.Desktop.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:RecoverX.Desktop.ViewModels"
+             xmlns:views="clr-namespace:RecoverX.Desktop.Views"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Index 0 is the theme dictionary and is swapped at runtime by ThemeService -->
+                <ResourceDictionary Source="Themes/Light.xaml"/>
+                <ResourceDictionary Source="Themes/Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <DataTemplate DataType="{x:Type vm:DashboardViewModel}"><views:DashboardView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:DrivesViewModel}"><views:DrivesView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:HistoryViewModel}"><views:HistoryView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ScanViewModel}"><views:ScanView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:RecoveredFilesViewModel}"><views:RecoveredFilesView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SettingsViewModel}"><views:SettingsView/></DataTemplate>
+            <DataTemplate DataType="{x:Type vm:AboutViewModel}"><views:AboutView/></DataTemplate>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

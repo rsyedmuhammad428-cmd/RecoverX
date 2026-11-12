@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>RecoverX.Database</RootNamespace>
+    <AssemblyName>RecoverX.Database</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <ProjectReference Include="..\RecoverX.Core\RecoverX.Core.csproj" />
+  </ItemGroup>
+</Project>

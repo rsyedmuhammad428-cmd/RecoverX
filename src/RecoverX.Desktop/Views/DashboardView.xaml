@@ -1,0 +1,73 @@
+<UserControl x:Class="RecoverX.Desktop.Views.DashboardView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="clr-namespace:RecoverX.Desktop.Services" xmlns:views="clr-namespace:RecoverX.Desktop.Views">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="{loc:Loc Dash_Welcome}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{loc:Loc App_Tagline}" Style="{StaticResource Muted}"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                <Button Content="{loc:Loc Dash_QuickScan}" Command="{Binding QuickScanCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"
+                        ToolTip="{loc:Loc Dash_QuickScan_Tip}"/>
+                <Button Content="{loc:Loc Dash_DeepScan}" IsEnabled="False" Style="{StaticResource PrimaryButton}"
+                        ToolTip="{loc:Loc Dash_DeepScan_Tip}"/>
+            </StackPanel>
+            <TextBlock Text="{loc:Loc Dash_ScanNote}" Style="{StaticResource Muted}" Margin="0,6,0,0"/>
+
+            <TextBlock Text="{loc:Loc Dash_Drives}" Style="{StaticResource SectionTitle}"/>
+            <views:DriveCardsView DataContext="{Binding Drives}"/>
+
+            <TextBlock Text="{loc:Loc Dash_Stats}" Style="{StaticResource SectionTitle}"/>
+            <StackPanel Orientation="Horizontal" DataContext="{Binding History}">
+                <Border Style="{StaticResource Card}" Width="200" Margin="0,0,16,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Stats.TotalScans}" FontSize="26" FontWeight="Bold"/>
+                        <TextBlock Text="{loc:Loc Dash_Stat_Scans}" Style="{StaticResource Muted}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Width="200" Margin="0,0,16,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Stats.CompletedScans}" FontSize="26" FontWeight="Bold"/>
+                        <TextBlock Text="{loc:Loc Dash_Stat_Completed}" Style="{StaticResource Muted}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Width="200" Margin="0,0,16,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Stats.TotalFilesFound}" FontSize="26" FontWeight="Bold"/>
+                        <TextBlock Text="{loc:Loc Dash_Stat_Files}" Style="{StaticResource Muted}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Width="200" DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding RecoveredCount}" FontSize="26" FontWeight="Bold"/>
+                        <TextBlock Text="{loc:Loc Dash_Stat_Recovered}" Style="{StaticResource Muted}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <TextBlock Text="{loc:Loc Dash_Recent}" Style="{StaticResource SectionTitle}"/>
+            <TextBlock Text="{loc:Loc Dash_NoScans}" Style="{StaticResource Muted}" DataContext="{Binding History}"
+                       Visibility="{Binding HasNoSessions, Converter={StaticResource BoolToVis}}"/>
+            <ItemsControl ItemsSource="{Binding History.Sessions}" ItemTemplate="{StaticResource SessionTemplate}"/>
+
+            <TextBlock Text="{loc:Loc Dash_FileSystems}" Style="{StaticResource SectionTitle}"/>
+            <ItemsControl ItemsSource="{Binding SupportedFileSystems}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Padding="12,6" Margin="0,0,8,0">
+                            <TextBlock Text="{Binding}" FontWeight="SemiBold"/>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="{loc:Loc Dash_Tips}" Style="{StaticResource SectionTitle}"/>
+            <ItemsControl ItemsSource="{Binding SafetyTips}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding StringFormat='&#x2022;  {0}'}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

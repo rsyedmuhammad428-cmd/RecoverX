@@ -1,0 +1,28 @@
+<UserControl x:Class="RecoverX.Desktop.Views.AboutView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="clr-namespace:RecoverX.Desktop.Services">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+            <TextBlock Text="{loc:Loc About_Title}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{loc:Loc App_Tagline}" Style="{StaticResource Muted}"/>
+            <TextBlock Text="{loc:Loc App_PoweredBy}" Style="{StaticResource Muted}"/>
+            <TextBlock Text="{Binding VersionLine}" Style="{StaticResource Muted}" Margin="0,8,0,0"/>
+
+            <TextBlock Text="{loc:Loc About_StatusTitle}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}"><TextBlock Text="{Binding Status}" TextWrapping="Wrap"/></Border>
+
+            <TextBlock Text="{loc:Loc About_EnvTitle}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding EnvironmentLines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,0,0,4"/></DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding CompatNote}" Style="{StaticResource Muted}" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{loc:Loc About_LimitsTitle}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}"><TextBlock Text="{Binding Limitations}" TextWrapping="Wrap"/></Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

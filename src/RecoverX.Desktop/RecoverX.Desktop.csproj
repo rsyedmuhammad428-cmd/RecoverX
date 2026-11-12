@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>RecoverX.Desktop</RootNamespace>
+    <AssemblyName>RecoverX.Desktop</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <!-- Satellite resource assemblies for other languages (e.g. Strings.ur.resx) are produced automatically. -->
+    <SatelliteResourceLanguages>en;ur</SatelliteResourceLanguages>
+    <NativeBinDir>$(MSBuildThisFileDirectory)..\..\native-bin\</NativeBinDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+    <ProjectReference Include="..\RecoverX.Core\RecoverX.Core.csproj" />
+    <ProjectReference Include="..\RecoverX.Database\RecoverX.Database.csproj" />
+  </ItemGroup>
+  <!-- Native engine DLLs built by scripts\build-native.ps1; copied next to the exe as x64\ and x86\ -->
+  <ItemGroup>
+    <None Include="$(NativeBinDir)x64\recoverx_engine.dll" Condition="Exists('$(NativeBinDir)x64\recoverx_engine.dll')">
+      <Link>x64\recoverx_engine.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(NativeBinDir)x86\recoverx_engine.dll" Condition="Exists('$(NativeBinDir)x86\recoverx_engine.dll')">
+      <Link>x86\recoverx_engine.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Target Name="WarnIfNativeEngineMissing" BeforeTargets="Build">
+    <Warning Condition="!Exists('$(NativeBinDir)x64\recoverx_engine.dll')"
+             Text="Native engine not found in native-bin\x64. Run scripts\build-native.ps1. RecoverX will still run, using basic drive detection." />
+  </Target>
+</Project>

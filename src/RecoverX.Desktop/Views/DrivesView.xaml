@@ -1,0 +1,9 @@
+<UserControl x:Class="RecoverX.Desktop.Views.DrivesView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="clr-namespace:RecoverX.Desktop.Services" xmlns:views="clr-namespace:RecoverX.Desktop.Views">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="{loc:Loc Drives_Title}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{loc:Loc Drives_Subtitle}" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
+            <views:DriveCardsView/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

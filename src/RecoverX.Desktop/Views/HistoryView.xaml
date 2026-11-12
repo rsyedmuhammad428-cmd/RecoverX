@@ -1,0 +1,16 @@
+<UserControl x:Class="RecoverX.Desktop.Views.HistoryView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="clr-namespace:RecoverX.Desktop.Services">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <TextBlock Text="{loc:Loc Hist_Title}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{loc:Loc Hist_Subtitle}" Style="{StaticResource Muted}" Margin="0,0,0,16"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <Button Content="{loc:Loc Hist_Refresh}" Command="{Binding RefreshCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"/>
+                <Button Content="{loc:Loc Hist_Clear}" Command="{Binding ClearCommand}" Style="{StaticResource PrimaryButton}"/>
+            </StackPanel>
+            <TextBlock Text="{Binding Status}" Foreground="{DynamicResource ErrorBrush}"/>
+            <TextBlock Text="{loc:Loc Hist_None}" Style="{StaticResource Muted}"
+                       Visibility="{Binding HasNoSessions, Converter={StaticResource BoolToVis}}"/>
+            <ItemsControl ItemsSource="{Binding Sessions}" ItemTemplate="{StaticResource SessionTemplate}"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

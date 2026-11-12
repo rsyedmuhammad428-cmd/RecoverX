@@ -1,0 +1,88 @@
+<UserControl x:Class="RecoverX.Desktop.Views.SettingsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:loc="clr-namespace:RecoverX.Desktop.Services">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+            <TextBlock Text="{loc:Loc Set_Title}" Style="{StaticResource PageTitle}"/>
+
+            <TextBlock Text="{loc:Loc Set_Appearance}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <RadioButton GroupName="theme" Content="{loc:Loc Set_Theme_Light}" IsChecked="{Binding IsLightTheme, Mode=TwoWay}" Margin="0,0,0,6"/>
+                    <RadioButton GroupName="theme" Content="{loc:Loc Set_Theme_Dark}" IsChecked="{Binding IsDarkTheme, Mode=TwoWay}"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{loc:Loc Set_Destination}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}"/>
+                    <TextBlock Text="{loc:Loc Set_Destination_Note}" Style="{StaticResource Muted}" Margin="0,6,0,10"/>
+                    <Button Content="{loc:Loc Set_Destination_Save}" Command="{Binding SaveDestinationCommand}"
+                            Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left"/>
+                    <TextBlock Text="{Binding DestinationMessage}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{loc:Loc Set_ScanPrefs}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{loc:Loc Set_ScanType_Default}" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,10">
+                        <RadioButton GroupName="scantype" Content="{loc:Loc ScanType_Quick}" IsChecked="{Binding IsQuickDefault, Mode=TwoWay}" Margin="0,0,16,0"/>
+                        <RadioButton GroupName="scantype" Content="{loc:Loc ScanType_Deep}" IsChecked="{Binding IsDeepDefault, Mode=TwoWay}"/>
+                    </StackPanel>
+                    <TextBlock Text="{loc:Loc Set_MinFileSize}"/>
+                    <TextBox Text="{Binding MinFileSizeText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" Width="140" HorizontalAlignment="Left" Margin="0,4,0,10"/>
+
+                    <TextBlock Text="{loc:Loc Set_Preview}" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                    <CheckBox Content="{loc:Loc Set_Preview_Enable}" IsChecked="{Binding PreviewEnabled}" Margin="0,4,0,6"/>
+                    <TextBlock Text="{loc:Loc Set_Preview_MaxSize}"/>
+                    <TextBox Text="{Binding PreviewMaxText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" Width="140" HorizontalAlignment="Left" Margin="0,4,0,6"/>
+                    <TextBlock Text="{loc:Loc Set_Preview_Formats}" Style="{StaticResource Muted}"/>
+
+                    <TextBlock Text="{loc:Loc Set_History}" FontWeight="SemiBold" Margin="0,12,0,0"/>
+                    <TextBlock Text="{loc:Loc Set_History_Max}" Margin="0,4,0,0"/>
+                    <TextBox Text="{Binding HistoryMaxText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" Width="140" HorizontalAlignment="Left" Margin="0,4,0,10"/>
+
+                    <TextBlock Text="{loc:Loc Set_ScanPrefs_Note}" Style="{StaticResource Muted}"/>
+                    <Button Content="{loc:Loc Set_Prefs_Save}" Command="{Binding SavePreferencesCommand}"
+                            Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+                    <TextBlock Text="{Binding PreferencesMessage}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{loc:Loc Set_Categories}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{loc:Loc Set_Categories_Note}" Style="{StaticResource Muted}" Margin="0,0,0,8"/>
+                    <ItemsControl ItemsSource="{Binding Categories}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,10">
+                                    <CheckBox Content="{Binding DisplayName}" IsChecked="{Binding Enabled}" FontWeight="SemiBold"/>
+                                    <TextBox Text="{Binding ExtensionsText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" Margin="22,4,0,0"
+                                             Visibility="{Binding IsEditable, Converter={StaticResource BoolToVis}}"/>
+                                    <TextBlock Text="{Binding CatchAllNote}" Style="{StaticResource Muted}" Margin="22,2,0,0"
+                                               Visibility="{Binding IsCatchAll, Converter={StaticResource BoolToVis}}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="{loc:Loc Set_Cat_Save}" Command="{Binding SaveCategoriesCommand}"
+                            Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,4,0,0"/>
+                    <TextBlock Text="{Binding CategoriesMessage}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{loc:Loc Set_Logs}" Style="{StaticResource SectionTitle}"/>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{Binding LogsPathLine}" Style="{StaticResource Muted}"/>
+                    <TextBlock Text="{Binding DatabasePathLine}" Style="{StaticResource Muted}"/>
+                    <Button Content="{loc:Loc Set_OpenLogs}" Command="{Binding OpenLogsCommand}"
+                            Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,10,0,0"/>
+                    <TextBlock Text="{Binding LogsMessage}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

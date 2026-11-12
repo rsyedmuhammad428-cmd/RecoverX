@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>RecoverX.Core</RootNamespace>
+    <AssemblyName>RecoverX.Core</AssemblyName>
+  </PropertyGroup>
+</Project>
