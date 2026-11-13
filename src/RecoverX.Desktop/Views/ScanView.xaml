@@ -5,9 +5,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0">
-            <TextBlock Text="{loc:Loc Scan_Title}" Style="{StaticResource PageTitle}"/>
-        </StackPanel>
+        <TextBlock Grid.Row="0" Text="{loc:Loc Scan_Title}" Style="{StaticResource PageTitle}"/>
 
         <!-- Idle: nothing scanned yet (or the last attempt failed) -->
         <StackPanel Grid.Row="1" Visibility="{Binding IsIdle, Converter={StaticResource BoolToVis}}" VerticalAlignment="Top">
@@ -32,14 +30,21 @@
                 <ProgressBar Minimum="0" Maximum="1" Value="{Binding Progress, Mode=OneWay}" Height="10"
                              Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderBrushSoft}" BorderThickness="0"/>
                 <TextBlock Text="{Binding ProgressText}" Style="{StaticResource Muted}" Margin="0,6,0,0"/>
-                <TextBlock Text="{Binding CandidatesText}" Style="{StaticResource Muted}"/>
-                <Button Content="{loc:Loc Scan_Cancel}" Command="{Binding CancelCommand}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+                <TextBlock Text="{Binding CandidatesText}" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                <TextBlock Text="{loc:Loc Deep_TimeNote}" Style="{StaticResource Muted}" Margin="0,6,0,0"
+                           Visibility="{Binding IsDeep, Converter={StaticResource BoolToVis}}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Content="{loc:Loc Scan_Pause}" Command="{Binding PauseCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                    <Button Content="{loc:Loc Scan_Resume}" Command="{Binding ResumeCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,8,0"/>
+                    <Button Content="{loc:Loc Scan_StopKeep}" Command="{Binding CancelCommand}" Style="{StaticResource PrimaryButton}" ToolTip="{loc:Loc Scan_StopKeep_Tip}"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 
         <!-- Results -->
         <Grid Grid.Row="1" Visibility="{Binding HasResults, Converter={StaticResource BoolToVis}}">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
@@ -50,60 +55,155 @@
                 <ItemsControl ItemsSource="{Binding Notices}" Visibility="{Binding HasNotices, Converter={StaticResource BoolToVis}}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource WarningBar}" Margin="0,0,0,6"><TextBlock Text="{Binding}" TextWrapping="Wrap"/></Border>
+                            <Border Style="{StaticResource WarningBar}" Margin="0,0,0,4"><TextBlock Text="{Binding}" TextWrapping="Wrap"/></Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <WrapPanel Margin="0,6,0,8">
-                    <CheckBox Content="{loc:Loc Scan_ShowRecoverableOnly}" IsChecked="{Binding ShowRecoverableOnly}" IsEnabled="{Binding CanEditSelection}" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                    <Button Content="{loc:Loc Scan_SelectRecoverable}" Command="{Binding SelectLikelyCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0"/>
-                    <Button Content="{loc:Loc Scan_ClearSelection}" Command="{Binding ClearSelectionCommand}" Style="{StaticResource PrimaryButton}"/>
-                </WrapPanel>
-                <Grid Margin="8,0,0,2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="32"/><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="150"/><ColumnDefinition Width="210"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="1" Text="{loc:Loc Scan_Col_Name}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="2" Text="{loc:Loc Scan_Col_Size}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="3" Text="{loc:Loc Scan_Col_Modified}" FontWeight="SemiBold"/>
-                    <TextBlock Grid.Column="4" Text="{loc:Loc Scan_Col_Condition}" FontWeight="SemiBold"/>
-                </Grid>
             </StackPanel>
 
-            <ListBox Grid.Row="1" ItemsSource="{Binding Rows}" Style="{StaticResource ResultsList}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border BorderBrush="{DynamicResource BorderBrushSoft}" BorderThickness="0,0,0,1" Padding="8,6">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="32"/><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="150"/><ColumnDefinition Width="210"/>
-                                </Grid.ColumnDefinitions>
-                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center"
-                                          IsEnabled="{Binding DataContext.CanEditSelection, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
-                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Entry.Path}"/>
-                                    <TextBlock Text="{Binding FolderText}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" FontSize="11"/>
-                                    <TextBlock Text="{Binding PathUncertainText}" Style="{StaticResource Muted}" FontSize="11"
-                                               Visibility="{Binding PathUncertain, Converter={StaticResource BoolToVis}}"/>
-                                </StackPanel>
-                                <TextBlock Grid.Column="2" Text="{Binding SizeText}" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="3" Text="{Binding ModifiedText}" VerticalAlignment="Center"/>
-                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" ToolTip="{Binding ConditionTip}">
-                                    <Ellipse Width="10" Height="10" Fill="{Binding ConditionColor}" Margin="0,0,8,0"/>
-                                    <TextBlock Text="{Binding ConditionText}" TextTrimming="CharacterEllipsis"/>
-                                </StackPanel>
-                            </Grid>
+            <!-- Search, filters, sort -->
+            <WrapPanel Grid.Row="1" Margin="0,8,0,8">
+                <StackPanel Margin="0,0,10,6">
+                    <TextBlock Text="{loc:Loc Filter_Search}" Style="{StaticResource Muted}" FontSize="11"/>
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" Width="200"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,10,6">
+                    <TextBlock Text="{loc:Loc Filter_Type}" Style="{StaticResource Muted}" FontSize="11"/>
+                    <ComboBox ItemsSource="{Binding CategoryChoices}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Text" Width="130" Padding="6,5"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,10,6">
+                    <TextBlock Text="{loc:Loc Filter_Rating}" Style="{StaticResource Muted}" FontSize="11"/>
+                    <ComboBox ItemsSource="{Binding RatingChoices}" SelectedItem="{Binding SelectedRating}" DisplayMemberPath="Text" Width="130" Padding="6,5"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,10,6">
+                    <TextBlock Text="{loc:Loc Filter_Size}" Style="{StaticResource Muted}" FontSize="11"/>
+                    <ComboBox ItemsSource="{Binding SizeChoices}" SelectedItem="{Binding SelectedSize}" DisplayMemberPath="Text" Width="130" Padding="6,5"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,10,6">
+                    <TextBlock Text="{loc:Loc Filter_DateFrom}" Style="{StaticResource Muted}" FontSize="11"/>
+                    <DatePicker SelectedDate="{Binding DateFrom}" Width="120"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,10,6">
+                    <TextBlock Text="{loc:Loc Filter_DateTo}" Style="{StaticResource Muted}" FontSize="11"/>
+                    <DatePicker SelectedDate="{Binding DateTo}" Width="120"/>
+                </StackPanel>
+                <StackPanel Margin="0,0,10,6">
+                    <TextBlock Text="{loc:Loc Filter_Sort}" Style="{StaticResource Muted}" FontSize="11"/>
+                    <StackPanel Orientation="Horizontal">
+                        <ComboBox ItemsSource="{Binding SortChoices}" SelectedItem="{Binding SelectedSort}" DisplayMemberPath="Text" Width="110" Padding="6,5"/>
+                        <CheckBox Content="{loc:Loc Filter_Descending}" IsChecked="{Binding SortDescending}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="{loc:Loc Filter_Reset}" Command="{Binding ResetFiltersCommand}" Style="{StaticResource SecondaryButton}" VerticalAlignment="Bottom" Margin="0,0,0,6"/>
+            </WrapPanel>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="340"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <WrapPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,6">
+                    <TextBlock Text="{Binding ShownText}" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                    <Button Content="{loc:Loc Scan_SelectShown}" Command="{Binding SelectShownCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                    <Button Content="{loc:Loc Scan_SelectRecoverable}" Command="{Binding SelectExcellentCommand}" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0"/>
+                    <Button Content="{loc:Loc Scan_ClearSelection}" Command="{Binding ClearSelectionCommand}" Style="{StaticResource SecondaryButton}"/>
+                </WrapPanel>
+
+                <DataGrid Grid.Row="1" Grid.Column="0" Style="{StaticResource ResultsGrid}" ItemsSource="{Binding Rows}"
+                          SelectedItem="{Binding CurrentRow, Mode=TwoWay}" x:Name="Results">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="34">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"
+                                              IsEnabled="{Binding DataContext.CanEditSelection, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="{loc:Loc Scan_Col_Name}" Width="*" MinWidth="180">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Entry.Path}"/>
+                                        <TextBlock Text="{Binding FolderText}" Style="{StaticResource Muted}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontSize="11"/>
+                                        <TextBlock Text="{Binding PathUncertainText}" Style="{StaticResource Muted}" FontSize="11"
+                                                   Visibility="{Binding PathUncertain, Converter={StaticResource BoolToVis}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="{loc:Loc Scan_Col_Type}" Binding="{Binding TypeText}" Width="60"/>
+                        <DataGridTextColumn Header="{loc:Loc Scan_Col_Size}" Binding="{Binding SizeText}" Width="85"/>
+                        <DataGridTextColumn Header="{loc:Loc Scan_Col_Date}" Binding="{Binding DateText}" Width="130"/>
+                        <DataGridTemplateColumn Header="{loc:Loc Scan_Col_Condition}" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel ToolTip="{Binding ConditionTip}" Background="Transparent">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="10" Height="10" Fill="{Binding RatingColor}" Margin="0,0,7,0"/>
+                                            <TextBlock Text="{Binding RatingText}" FontWeight="SemiBold"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding ConditionText}" Style="{StaticResource Muted}" FontSize="11" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="{loc:Loc Scan_Preview}" Style="{StaticResource SecondaryButton}" Padding="8,3"
+                                            Command="{Binding DataContext.PreviewCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Preview panel -->
+                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" Style="{StaticResource Card}" Margin="12,0,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0">
+                            <TextBlock Text="{loc:Loc Preview_Title}" FontWeight="SemiBold" FontSize="14"/>
+                            <TextBlock Text="{Binding PreviewTitle}" Style="{StaticResource Muted}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                        </StackPanel>
+                        <Border Grid.Row="1" Style="{StaticResource WarningBar}" Visibility="{Binding HasPreviewWarning, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding PreviewWarning}" TextWrapping="Wrap" FontSize="11"/>
                         </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                        <Grid Grid.Row="2" Margin="0,10,0,0">
+                            <TextBlock Text="{loc:Loc Preview_Hint}" Style="{StaticResource Muted}"
+                                       Visibility="{Binding ShowPreviewHint, Converter={StaticResource BoolToVis}}"/>
+                            <TextBlock Text="{Binding PreviewMessage}" Style="{StaticResource Muted}" Background="{DynamicResource SurfaceBrush}"
+                                       Visibility="{Binding HasPreviewMessage, Converter={StaticResource BoolToVis}}"/>
+                            <Image Source="{Binding PreviewImage}" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Top"
+                                   Visibility="{Binding HasPreviewImage, Converter={StaticResource BoolToVis}}"/>
+                            <TextBox Text="{Binding PreviewText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                                     VerticalScrollBarVisibility="Auto" Style="{StaticResource Input}"
+                                     Visibility="{Binding HasPreviewText, Converter={StaticResource BoolToVis}}"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
 
             <!-- Recovery controls -->
-            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,10,0,0">
+            <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,10,0,0">
                 <StackPanel>
                     <TextBlock Text="{Binding SelectedText}" FontWeight="SemiBold"/>
                     <TextBlock Text="{loc:Loc Scan_Destination}" Margin="0,8,0,2"/>
-                    <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" IsEnabled="{Binding CanEditSelection}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding Destination, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" IsEnabled="{Binding CanEditSelection}"/>
+                        <Button Grid.Column="1" Content="{loc:Loc Scan_Browse}" Command="{Binding BrowseCommand}" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0"/>
+                    </Grid>
                     <TextBlock Text="{Binding DestinationHint}" Style="{StaticResource Muted}" FontSize="11" Margin="0,2,0,6"/>
                     <CheckBox Content="{loc:Loc Scan_PreserveFolders}" IsChecked="{Binding PreserveFolders}" IsEnabled="{Binding CanEditSelection}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
@@ -119,7 +219,7 @@
                                      Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderBrushSoft}" BorderThickness="0"/>
                     </StackPanel>
                     <TextBlock Text="{Binding DoneText}" TextWrapping="Wrap" Margin="0,10,0,0" FontWeight="SemiBold" Visibility="{Binding HasDoneText, Converter={StaticResource BoolToVis}}"/>
-                    <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0" Visibility="{Binding HasOutcomes, Converter={StaticResource BoolToVis}}">
+                    <ScrollViewer MaxHeight="130" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0" Visibility="{Binding HasOutcomes, Converter={StaticResource BoolToVis}}">
                         <ItemsControl ItemsSource="{Binding Outcomes}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>

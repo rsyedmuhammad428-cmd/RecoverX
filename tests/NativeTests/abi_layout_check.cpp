@@ -1,5 +1,5 @@
 // Compile-time guard: the C# structs in RecoverX.Core/Native/NativeMethods.cs assume exactly these Windows layouts.
-// Compiled with a Windows toolchain (wchar_t = 2 bytes) by scripts/verify-linux.sh. A mismatch fails the build.
+// Compiled for x64 and x86 by the Windows build (CMake target abi_layout_check) and by scripts/verify-linux.sh. A mismatch fails the build.
 #include <cstddef>
 #include "rx_engine.h"
 #define RX_ASSERT_EQ(a, b) static_assert((a) == (b), #a " must equal " #b)
@@ -36,4 +36,21 @@ RX_ASSERT_EQ(offsetof(RxFileEntry, path), 80);
 RX_ASSERT_EQ(offsetof(RxScanProgress, phase), 4);
 RX_ASSERT_EQ(offsetof(RxScanProgress, flags), 20);
 RX_ASSERT_EQ(offsetof(RxScanProgress, bad_records), 28);
+// Phase 4 structures (Deep Scan)
+RX_ASSERT_EQ(sizeof(RxCarveOptions), 16);
+RX_ASSERT_EQ(sizeof(RxCarveProgress), 40);
+RX_ASSERT_EQ(offsetof(RxCarveProgress, bytes_total), 16);
+RX_ASSERT_EQ(offsetof(RxCarveProgress, bytes_done), 24);
+RX_ASSERT_EQ(offsetof(RxCarveProgress, found), 32);
+RX_ASSERT_EQ(offsetof(RxCarveProgress, read_errors), 36);
+RX_ASSERT_EQ(sizeof(RxCarveEntry), 64);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, type), 4);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, condition), 8);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, evidence), 12);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, offset), 16);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, size), 24);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, content_time), 32);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, clusters_total), 40);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, clusters_in_use), 44);
+RX_ASSERT_EQ(offsetof(RxCarveEntry, ext), 48);
 int main() { return 0; }

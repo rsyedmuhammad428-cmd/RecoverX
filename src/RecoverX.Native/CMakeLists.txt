@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(RecoverXNative VERSION 0.2.0 LANGUAGES CXX)
+project(RecoverXNative VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)            # conservative: builds with the VS 2015+ toolsets, which still target Windows 7
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,6 +12,10 @@ set(RX_SOURCES
     src/ntfs_format.cpp
     src/file_sig.cpp
     src/ntfs_scan.cpp
+    src/carve_format.cpp
+    src/carve_scan.cpp
+    src/fat_format.cpp
+    src/fat_scan.cpp
     src/platform_win.cpp
     src/platform_stub.cpp)
 
@@ -26,7 +30,10 @@ if(WIN32)
 endif()
 
 add_library(recoverx_engine SHARED ${RX_SOURCES})
-target_include_directories(recoverx_engine PUBLIC include PRIVATE src)
+# C++ only: windres (MinGW resource compiler) cannot handle include paths that contain spaces, and the .rc needs none.
+target_include_directories(recoverx_engine
+  PUBLIC  $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/include>>
+  PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 target_compile_definitions(recoverx_engine PRIVATE RX_ENGINE_BUILD)
 set_target_properties(recoverx_engine PROPERTIES PREFIX "")   # recoverx_engine.dll on Windows
 

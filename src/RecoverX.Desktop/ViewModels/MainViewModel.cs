@@ -39,7 +39,7 @@ namespace RecoverX.Desktop.ViewModels
             };
             NavigateCommand = new RelayCommand(p => Navigate((NavItem)p), p => p is NavItem && ((NavItem)p).IsEnabled);
             Navigate(NavItems[0]);
-            launcher.ScanRequested += d => Navigate(NavItems[1]);       // the scan page starts the scan itself
+            launcher.ScanRequested += r => Navigate(NavItems[1]);       // the scan page starts the scan itself
             launcher.PickerRequested += () => Navigate(NavItems[2]);
         }
 

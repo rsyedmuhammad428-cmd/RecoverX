@@ -8,16 +8,19 @@ namespace RecoverX.Core.Models
         public const string DarkTheme = "Dark";
         public const string QuickScan = "Quick";
         public const string DeepScan = "Deep";
+        public const string SnapshotScan = "Snapshot";
 
         public string Theme { get; set; } = LightTheme;
         public string Language { get; set; } = "en";
         public string DefaultRecoveryDestination { get; set; } = string.Empty;
 
-        // Scan preferences (stored now; consumed by the scan engine from Phase 3)
+        // Scan preferences
         public string DefaultScanType { get; set; } = QuickScan;
         public int MinFileSizeKb { get; set; } = 0;
+        /// <summary>Deep Scan on NTFS normally reads only free space; this also reads space used by existing files.</summary>
+        public bool DeepScanIncludeUsedSpace { get; set; }
 
-        // Preview settings (consumed from Phase 4)
+        // Preview settings
         public bool PreviewEnabled { get; set; } = true;
         public int PreviewMaxSizeMb { get; set; } = 25;
 

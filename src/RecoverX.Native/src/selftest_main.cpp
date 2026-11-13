@@ -22,6 +22,7 @@ static const char* fs_name(uint32_t f) {
 }
 
 // rx_selftest --scan E [--hash]   (E = drive letter; a file path also works on non-Windows builds) : NTFS Quick Scan of a drive, one tab-separated ENTRY line per deleted file.
+// rx_selftest --carve E [--hash]  : Deep Scan (signature search) of a drive, one CARVED line per file.
 // Used by scripts/Test-NtfsVhd.ps1 to compare the engine against files whose content was known before deletion.
 // UTF-8 output independent of the console code page / C locale, so scripts can parse names exactly.
 static void print_utf8(const wchar_t* w) {
@@ -77,10 +78,49 @@ static int scan_mode(const char* target, bool hash) {
     return st == RX_OK ? 0 : 1;
 }
 
+// rx_selftest --carve E [--hash] : Deep Scan of a drive, one tab-separated CARVED line per file found by signature.
+static int carve_mode(const char* target, bool hash) {
+    std::wstring root;
+    if (std::strlen(target) == 1) { root += (wchar_t)target[0]; root += L":\\"; }
+    else for (const char* c = target; *c; ++c) root += (wchar_t)(unsigned char)*c;
+    RxCarveHandle h = nullptr;
+    RxStatus st = rx_carve_create(root.c_str(), nullptr, &h);
+    std::printf("carve_create status=%d\n", st);
+    if (st != RX_OK) return st == RX_ERR_ACCESS_DENIED ? 4 : 3;
+    st = rx_carve_run(h, nullptr);
+    RxCarveProgress p; p.struct_size = sizeof p; rx_carve_progress(h, &p);
+    std::printf("carve_run status=%d bytes_examined=%llu read_errors=%u flags=0x%x\n", st, (unsigned long long)p.bytes_total, p.read_errors, p.flags);
+    uint32_t n = rx_carve_result_count(h);
+    std::vector<RxCarveEntry> page(256);
+    for (uint32_t start = 0; start < n; start += 256) {
+        for (auto& e : page) e.struct_size = sizeof(RxCarveEntry);
+        uint32_t got = 0;
+        if (rx_carve_get_results(h, start, page.data(), 256, &got) != RX_OK) break;
+        for (uint32_t i = 0; i < got; ++i) {
+            const RxCarveEntry& e = page[i];
+            std::string sha = "-";
+            if (hash && e.size > 0) {
+                Sha256 s; std::vector<uint8_t> buf(1 << 20); uint64_t off = 0;
+                for (;;) { uint32_t g = 0; if (rx_carve_read_file(h, start + i, off, buf.data(), (uint32_t)buf.size(), &g) != RX_OK || g == 0) break; s.update(buf.data(), g); off += g; }
+                sha = (off == e.size) ? s.hex() : "SHORT";
+            }
+            std::printf("CARVED\t%llu\t%llu\t%ls\t%s\t0x%x\t%s\n", (unsigned long long)e.offset, (unsigned long long)e.size, e.ext,
+                        cond_name(e.condition), e.evidence, sha.c_str());
+        }
+    }
+    std::printf("summary carved=%u\n", n);
+    rx_carve_destroy(h);
+    return st == RX_OK ? 0 : 1;
+}
+
 int main(int argc, char** argv) {
     if (argc >= 3 && std::strcmp(argv[1], "--scan") == 0) {
         bool hash = argc >= 4 && std::strcmp(argv[3], "--hash") == 0;
         return scan_mode(argv[2], hash);
+    }
+    if (argc >= 3 && std::strcmp(argv[1], "--carve") == 0) {
+        bool hash = argc >= 4 && std::strcmp(argv[3], "--hash") == 0;
+        return carve_mode(argv[2], hash);
     }
     std::printf("engine_abi=%u engine_version=%ls\n", rx_get_abi_version(), rx_get_version_string());
     std::printf("sizeof(RxVolumeInfo)=%u sizeof(RxProbeResult)=%u\n", rx_sizeof_volume_info(), rx_sizeof_probe_result());

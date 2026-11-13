@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   End-to-end NTFS recovery test on a DISPOSABLE virtual disk. Creates a small VHD, formats it NTFS, writes files whose
-  SHA-256 is known, deletes them, runs the RecoverX engine's Quick Scan against the VHD, and compares the recovered bytes.
+  SHA-256 is known, deletes them, runs the RecoverX engine's Quick Scan and Deep Scan against the VHD, and compares the recovered bytes.
   Nothing on your real drives is touched: only the temporary VHD (deleted at the end) is scanned.
 
   Run from an ELEVATED PowerShell on each Windows version you want to test (Windows 7 SP1 / 10 / 11), after scripts\build-native.ps1.
@@ -11,7 +11,8 @@
 .PARAMETER Letter     Drive letter to give the VHD (default: first free letter from Z downwards).
 .PARAMETER KeepVhd    Keep the VHD file afterwards for inspection.
 
-STATUS: written on Linux, NOT yet executed on any Windows version. The same scenario was validated against a real NTFS image on Linux.
+STATUS: NOT yet executed on any Windows version (needs an elevated session). Phase 4 adds a Deep Scan check: real JPEG/PNG/ZIP files made
+  by Windows encoders are deleted and must be carved back byte-identical and rated intact.
 Exit code 0 = every expectation met.
 #>
 param([string]$NativeBin = "", [string]$Letter = "", [switch]$KeepVhd)
@@ -108,9 +109,37 @@ try {
     }
     Log ("Created " + $plan.Count + " files")
 
+    # ---- 2b. real-format files for Deep Scan, made by Windows' own encoders (GDI+ JPEG/PNG, .NET ZIP) ----
+    $deepFile = Join-Path $work "deep-expected.txt"
+    "# name`tsize`tsha256" | Out-File -FilePath $deepFile -Encoding UTF8
+    $deepDir = Join-Path $root "deep"
+    New-Item -ItemType Directory -Force -Path $deepDir | Out-Null
+    Add-Type -AssemblyName System.Drawing
+    $deepNames = @()
+    foreach ($fmt in @(@("photo_deep.jpg", [Drawing.Imaging.ImageFormat]::Jpeg), @("image_deep.png", [Drawing.Imaging.ImageFormat]::Png))) {
+        $bmp = New-Object Drawing.Bitmap 640, 480
+        for ($y = 0; $y -lt 480; $y += 4) { for ($x = 0; $x -lt 640; $x += 4) { $bmp.SetPixel($x, $y, [Drawing.Color]::FromArgb(($x * 7) % 256, ($y * 3) % 256, ($x + $y) % 256)) } }
+        $full = Join-Path $deepDir $fmt[0]
+        $bmp.Save($full, $fmt[1]); $bmp.Dispose()
+        $deepNames += $fmt[0]
+    }
+    try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction Stop       # .NET 4.5+; skipped on PowerShell 2.0
+        $zsrc = Join-Path $work "zipsrc"; New-Item -ItemType Directory -Force -Path $zsrc | Out-Null
+        for ($i = 0; $i -lt 5; $i++) { [IO.File]::WriteAllBytes((Join-Path $zsrc ("part" + $i + ".bin")), (Make-Bytes 40000 (20 + $i) $null)) }
+        [IO.Compression.ZipFile]::CreateFromDirectory($zsrc, (Join-Path $deepDir "archive_deep.zip"))
+        $deepNames += "archive_deep.zip"
+    } catch { Log "ZIP creation skipped (needs .NET 4.5+ in PowerShell): $($_.Exception.Message)" }
+    foreach ($n in $deepNames) {
+        $b = [IO.File]::ReadAllBytes((Join-Path $deepDir $n))
+        ($n + "`t" + $b.Length + "`t" + (Sha256Hex $b)) | Out-File -FilePath $deepFile -Append -Encoding UTF8
+    }
+    Log ("Created " + $deepNames.Count + " real-format files for Deep Scan")
+
     # ---- 3. permanent deletion (no Recycle Bin) ----
     foreach ($p in $plan) { if ($p[2]) { $full = Join-Path $root $p[0]; if (Test-Path $full) { Remove-Item -LiteralPath $full -Force } } }
     Remove-Item -LiteralPath (Join-Path $root "deleted_dir") -Recurse -Force
+    Remove-Item -LiteralPath $deepDir -Recurse -Force
     Start-Sleep -Seconds 2
     Log "Deleted the planned files (no writes to the volume after this point)"
 
@@ -142,6 +171,25 @@ try {
         if ($sizeOk -and $hashOk) { $okCount++ } else { Check ("recovered content identical: " + $path) $false ("size " + $hit.size + " vs " + $size + "; sha " + $hit.sha + " vs " + $sha + "; condition " + $hit.cond) }
     }
     Check ("all deleted files recovered byte-for-byte (" + $okCount + " of " + $deletedCount + ")") ($okCount -eq $deletedCount) "see failures above"
+
+    # ---- 6. Deep Scan: the deleted real-format files must be found by signature in free space, byte-identical ----
+    $carve = & $selftest --carve $Letter --hash 2>&1
+    $carve | ForEach-Object { $_ } | Out-File -FilePath (Join-Path $work "carve-output.txt") -Encoding UTF8
+    $ccode = $LASTEXITCODE
+    Check "rx_selftest --carve exits with 0" ($ccode -eq 0) ("exit code $ccode")
+    $carved = @{}
+    foreach ($line in $carve) {
+        $s = [string]$line
+        if ($s.StartsWith("CARVED`t")) { $f = $s.Split("`t"); $carved[$f[6]] = @{ size = [int64]$f[2]; ext = $f[3]; cond = $f[4] } }
+        elseif ($s.StartsWith("summary") -or $s.StartsWith("carve_")) { Log $s }
+    }
+    foreach ($l in (Get-Content $deepFile)) {
+        if ($l.StartsWith("#")) { continue }
+        $f = $l.Split("`t")
+        $hit = $carved[$f[2]]
+        Check ("Deep Scan recovered " + $f[0] + " byte-for-byte") ($null -ne $hit) "no carved file has the original SHA-256"
+        if ($null -ne $hit) { Check ("Deep Scan rates " + $f[0] + " as intact") ($hit.cond -eq "VERIFIED") ("condition " + $hit.cond) }
+    }
 }
 catch {
     Log ("ERROR: " + $_.Exception.Message)

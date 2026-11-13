@@ -21,9 +21,9 @@ namespace RecoverX.Core.Models
         {
             return new List<FileCategory>
             {
-                New("Photos",    0, "jpg", "jpeg", "png", "bmp", "gif", "tif", "tiff", "webp"),
-                New("Videos",    1, "mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v"),
-                New("Documents", 2, "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "odt"),
+                New("Photos",    0, "jpg", "jpeg", "png", "bmp", "gif", "tif", "tiff", "webp", "heic", "avif", "cr3"),
+                New("Videos",    1, "mp4", "avi", "mov", "mkv", "wmv", "flv", "webm", "m4v", "3gp"),
+                New("Documents", 2, "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "odt", "ods", "odp", "epub", "msg"),
                 New("Audio",     3, "mp3", "wav", "flac", "aac", "ogg", "m4a", "wma"),
                 New("Archives",  4, "zip", "rar", "7z", "tar", "gz"),
                 New(OtherId,     5)

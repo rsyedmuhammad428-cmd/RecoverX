@@ -61,21 +61,28 @@ namespace RecoverX.Core.Interfaces
         VolumeProbeResult ProbeVolume(string root);
         DestinationVerdict ValidateDestination(string sourceRoot, string destinationDirectory);
         /// <summary>Opens a read-only NTFS Quick Scan session on a drive (needs administrator rights on a real drive).</summary>
-        NtfsScanOpenResult OpenNtfsScan(string root, ScanOptions options);
+        ScanOpenResult OpenNtfsScan(string root, ScanOptions options);
+        /// <summary>Opens a read-only Deep Scan (signature search) session on any drive (needs administrator rights on a real drive).</summary>
+        ScanOpenResult OpenDeepScan(string root, DeepScanOptions options);
+        /// <summary>Opens a read-only FAT12/16/32 or exFAT Quick Scan session (needs administrator rights on a real drive).</summary>
+        ScanOpenResult OpenFatScan(string root, ScanOptions options);
         /// <summary>Checks a file's first bytes against the type its name claims. NotChecked if the engine is unavailable.</summary>
         HeaderCheck CheckHeader(string fileName, byte[] data, int length);
     }
 
-    public sealed class NtfsScanOpenResult
+    public sealed class ScanOpenResult
     {
         public EngineStatus Status { get; set; }
-        public INtfsScanSession Session { get; set; }      // non-null only when Status is Ok
+        public IScanSession Session { get; set; }      // non-null only when Status is Ok
         public string Detail { get; set; }
     }
 
-    /// <summary>A scan in progress or finished. Disposing it closes the drive handle.</summary>
-    public interface INtfsScanSession : IDisposable
+    /// <summary>A Quick or Deep Scan in progress or finished. Disposing it closes the drive handle.</summary>
+    public interface IScanSession : IDisposable
     {
+        ScanMode Mode { get; }
+        /// <summary>Pauses or resumes a running scan (the engine stops at its next check point). Safe to call at any time.</summary>
+        void SetPaused(bool paused);
         /// <summary>Thread-safe; may be called while Run is executing on another thread.</summary>
         ScanProgress GetProgress();
         /// <summary>Blocking. Cancelled when the token is cancelled (results so far stay readable).</summary>

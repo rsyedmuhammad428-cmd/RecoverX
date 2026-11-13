@@ -131,8 +131,14 @@ namespace RecoverX.CoreTests
         public VolumeProbeResult ProbeVolume(string root) { return new VolumeProbeResult { Status = EngineStatus.Ok }; }
         public DestinationVerdict ValidateDestination(string s, string d) { return DestinationVerdict.SameVolume; }
         public HeaderCheck NextHeader = HeaderCheck.NotChecked;
-        public NtfsScanOpenResult OpenResult = new NtfsScanOpenResult { Status = EngineStatus.Unavailable };
-        public NtfsScanOpenResult OpenNtfsScan(string root, ScanOptions o) { return OpenResult; }
+        public ScanOpenResult OpenResult = new ScanOpenResult { Status = EngineStatus.Unavailable };
+        public ScanOpenResult OpenNtfsScan(string root, ScanOptions o) { NtfsOpens++; return OpenResult; }
+        public ScanOpenResult DeepOpenResult = new ScanOpenResult { Status = EngineStatus.Unavailable };
+        public DeepScanOptions LastDeepOptions;
+        public ScanOpenResult OpenDeepScan(string root, DeepScanOptions o) { LastDeepOptions = o; return DeepOpenResult; }
+        public ScanOpenResult FatOpenResult = new ScanOpenResult { Status = EngineStatus.Unavailable };
+        public int FatOpens, NtfsOpens;
+        public ScanOpenResult OpenFatScan(string root, ScanOptions o) { FatOpens++; return FatOpenResult; }
         public HeaderCheck CheckHeader(string name, byte[] data, int length) { return NextHeader; }
     }
 

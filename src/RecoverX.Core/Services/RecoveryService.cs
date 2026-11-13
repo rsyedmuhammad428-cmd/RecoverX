@@ -11,7 +11,7 @@ namespace RecoverX.Core.Services
 {
     public interface IRecoveryService
     {
-        Task<RecoverySummary> RecoverAsync(INtfsScanSession session, IList<ScanEntry> items, RecoveryRequest request,
+        Task<RecoverySummary> RecoverAsync(IScanSession session, IList<ScanEntry> items, RecoveryRequest request,
                                            IProgress<RecoveryProgress> progress, CancellationToken cancel);
     }
 
@@ -35,13 +35,13 @@ namespace RecoverX.Core.Services
         public RecoveryService(IEngineClient engine, IDestinationValidator validator, IRecoveredFilesRepository repo, IAppLogger log, Func<DateTime> now)
         { _engine = engine; _validator = validator; _repo = repo; _log = log; _now = now; }
 
-        public Task<RecoverySummary> RecoverAsync(INtfsScanSession session, IList<ScanEntry> items, RecoveryRequest req,
+        public Task<RecoverySummary> RecoverAsync(IScanSession session, IList<ScanEntry> items, RecoveryRequest req,
                                                   IProgress<RecoveryProgress> progress, CancellationToken cancel)
         {
             return Task.Run(() => Recover(session, items, req, progress, cancel));
         }
 
-        private RecoverySummary Recover(INtfsScanSession session, IList<ScanEntry> items, RecoveryRequest req,
+        private RecoverySummary Recover(IScanSession session, IList<ScanEntry> items, RecoveryRequest req,
                                         IProgress<RecoveryProgress> progress, CancellationToken cancel)
         {
             var summary = new RecoverySummary();
@@ -99,7 +99,7 @@ namespace RecoverX.Core.Services
             return summary;
         }
 
-        private RecoveryItemResult RecoverOne(INtfsScanSession session, ScanEntry e, RecoveryRequest req, string dir, byte[] buffer,
+        private RecoveryItemResult RecoverOne(IScanSession session, ScanEntry e, RecoveryRequest req, string dir, byte[] buffer,
                                               CancellationToken cancel, Action<long> fileProgress)
         {
             var result = new RecoveryItemResult { Entry = e };
@@ -199,6 +199,12 @@ namespace RecoverX.Core.Services
                 if (e.Created.HasValue) File.SetCreationTimeUtc(path, e.Created.Value);
                 if (e.Modified.HasValue) File.SetLastWriteTimeUtc(path, e.Modified.Value);
                 if (e.Accessed.HasValue) File.SetLastAccessTimeUtc(path, e.Accessed.Value);
+                // Deep Scan results have no file-system dates; use the date recorded inside the file (photo/video), if any.
+                if (!e.Modified.HasValue && e.ContentTime.HasValue)
+                {
+                    if (e.ContentTimeIsLocal) File.SetLastWriteTime(path, DateTime.SpecifyKind(e.ContentTime.Value, DateTimeKind.Local));
+                    else File.SetLastWriteTimeUtc(path, e.ContentTime.Value);
+                }
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentOutOfRangeException) { /* metadata is best effort */ }
         }

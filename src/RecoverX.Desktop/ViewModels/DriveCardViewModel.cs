@@ -10,7 +10,12 @@ namespace RecoverX.Desktop.ViewModels
         private readonly ILocalizer _l;
         public DriveModel Model { get; }
 
-        public DriveCardViewModel(DriveModel model, ILocalizer l) { Model = model; _l = l; }
+        public DriveCardViewModel(DriveModel model, ILocalizer l, bool deepIsDefault = false) { Model = model; _l = l; DeepIsDefault = deepIsDefault; }
+
+        /// <summary>Settings > Default scan type: that scan's button is listed first on the card.</summary>
+        public bool DeepIsDefault { get; }
+        public int QuickRow { get { return DeepIsDefault ? 1 : 0; } }
+        public int DeepRow { get { return DeepIsDefault ? 0 : 1; } }
 
         public string Letter { get { return Model.Letter; } }
         public string RootPath { get { return Model.RootPath; } }
@@ -55,8 +60,16 @@ namespace RecoverX.Desktop.ViewModels
         public string SourceLine { get { return _l.Format("Drive_Source", _l.Get(DriveClassifier.SourceKey(Model.Source))); } }
 
         /// <summary>Quick Scan reads the NTFS file table, so it is offered for ready NTFS drives only.</summary>
-        public bool CanScan { get { return Model.IsReady && string.Equals(Model.FileSystem, "NTFS", System.StringComparison.OrdinalIgnoreCase); } }
+        public bool CanScan { get { return Model.IsReady && ScanService.SupportsQuickScan(Model); } }
         public string ScanTooltip { get { return _l.Get(CanScan ? "Drive_Scan_Tip" : "Drive_Scan_NotNtfs"); } }
+
+        /// <summary>Deep Scan searches the raw data for file signatures, so it works on any readable drive (NTFS, FAT32, exFAT...).</summary>
+        public bool CanDeepScan { get { return Model.IsReady; } }
+        public string DeepScanTooltip { get { return _l.Get(CanDeepScan ? "Drive_DeepScan_Tip" : "Drive_DeepScan_NotReady"); } }
+
+        /// <summary>Windows restore points (shadow copies) exist for NTFS drives only.</summary>
+        public bool CanSnapshot { get { return Model.IsReady && ScanService.SupportsPreviousVersions(Model); } }
+        public string SnapshotTooltip { get { return _l.Get(CanSnapshot ? "Drive_Snapshots_Tip" : "Drive_Snapshots_NotNtfs"); } }
 
         public bool HasWarning { get { return DriveClassifier.WarningKey(Model) != null; } }
         public string WarningText

@@ -11,7 +11,7 @@ using RecoverX.Core.Services;
 namespace RecoverX.CoreTests
 {
     // ---------------- fakes ----------------
-    internal sealed class FakeSession : INtfsScanSession
+    internal sealed class FakeSession : IScanSession
     {
         public Dictionary<int, byte[]> Data = new Dictionary<int, byte[]>();
         public List<ScanEntry> Entries = new List<ScanEntry>();
@@ -24,6 +24,10 @@ namespace RecoverX.CoreTests
         public int ReadCalls;
         public ScanProgress Progress = new ScanProgress { Phase = ScanPhase.Done, IsDone = true };
 
+        public ScanMode SessionMode = ScanMode.Quick;
+        public bool? PausedState;
+        public ScanMode Mode { get { return SessionMode; } }
+        public void SetPaused(bool paused) { PausedState = paused; }
         public ScanProgress GetProgress() { return Progress; }
         public EngineStatus Run(CancellationToken c) { return c.IsCancellationRequested ? EngineStatus.Cancelled : RunStatus; }
         public IReadOnlyList<ScanEntry> GetResults() { return Entries; }
@@ -196,29 +200,29 @@ namespace RecoverX.CoreTests
         }
     }
 
-    // ---------------- Quick Scan runner ----------------
+    // ---------------- scan runner (Quick mode) ----------------
     [TestClass]
-    public class QuickScanServiceTests
+    public class ScanServiceQuickTests
     {
         private static DriveModel Ntfs() { return new DriveModel { Letter = "E:", RootPath = "E:\\", FileSystem = "NTFS", IsReady = true }; }
 
         [TestMethod]
-        public void Non_ntfs_drives_and_missing_engine_are_reported_without_touching_history()
+        public void Unsupported_file_systems_and_missing_engine_are_reported_without_touching_history()
         {
             var hist = new FakeHistory();
-            var svc = new QuickScanService(new FakeEngine { Available = true }, hist, new NullLogger());
-            var fat = new DriveModel { Letter = "F:", RootPath = "F:\\", FileSystem = "FAT32" };
-            Assert.AreEqual(EngineStatus.NotNtfs, svc.RunAsync(fat, new AppSettings(), null, CancellationToken.None).Result.Status);
-            var noEngine = new QuickScanService(new FakeEngine { Available = false }, hist, new NullLogger());
-            Assert.AreEqual(EngineStatus.Unavailable, noEngine.RunAsync(Ntfs(), new AppSettings(), null, CancellationToken.None).Result.Status);
+            var svc = new ScanService(new FakeEngine { Available = true }, hist, new NullLogger());
+            var fat = new DriveModel { Letter = "F:", RootPath = "F:\\", FileSystem = "ReFS" };
+            Assert.AreEqual(EngineStatus.NotNtfs, svc.RunAsync(fat, ScanMode.Quick, new AppSettings(), null, CancellationToken.None).Result.Status);
+            var noEngine = new ScanService(new FakeEngine { Available = false }, hist, new NullLogger());
+            Assert.AreEqual(EngineStatus.Unavailable, noEngine.RunAsync(Ntfs(), ScanMode.Quick, new AppSettings(), null, CancellationToken.None).Result.Status);
             Assert.AreEqual(0, hist.Sessions.Count);
         }
 
         [TestMethod]
         public void Open_failures_such_as_access_denied_are_passed_through()
         {
-            var eng = new FakeEngine { Available = true, OpenResult = new NtfsScanOpenResult { Status = EngineStatus.AccessDenied } };
-            var o = new QuickScanService(eng, new FakeHistory(), new NullLogger()).RunAsync(Ntfs(), new AppSettings(), null, CancellationToken.None).Result;
+            var eng = new FakeEngine { Available = true, OpenResult = new ScanOpenResult { Status = EngineStatus.AccessDenied } };
+            var o = new ScanService(eng, new FakeHistory(), new NullLogger()).RunAsync(Ntfs(), ScanMode.Quick, new AppSettings(), null, CancellationToken.None).Result;
             Assert.AreEqual(EngineStatus.AccessDenied, o.Status);
             Assert.IsFalse(o.HasResults);
         }
@@ -227,9 +231,9 @@ namespace RecoverX.CoreTests
         public void Successful_scan_keeps_the_session_and_records_a_completed_history_entry()
         {
             var session = new FakeSession { Entries = new List<ScanEntry> { new ScanEntry { Path = "\\a.txt", Size = 5 }, new ScanEntry { Path = "\\b.txt", Size = 6 } } };
-            var eng = new FakeEngine { Available = true, OpenResult = new NtfsScanOpenResult { Status = EngineStatus.Ok, Session = session } };
+            var eng = new FakeEngine { Available = true, OpenResult = new ScanOpenResult { Status = EngineStatus.Ok, Session = session } };
             var hist = new FakeHistory();
-            var o = new QuickScanService(eng, hist, new NullLogger()).RunAsync(Ntfs(), new AppSettings(), null, CancellationToken.None).Result;
+            var o = new ScanService(eng, hist, new NullLogger()).RunAsync(Ntfs(), ScanMode.Quick, new AppSettings(), null, CancellationToken.None).Result;
             Assert.AreEqual(EngineStatus.Ok, o.Status);
             Assert.AreEqual(2, o.Entries.Count);
             Assert.IsFalse(session.Disposed);                         // kept open for recovery
@@ -242,10 +246,10 @@ namespace RecoverX.CoreTests
         public void Cancelled_scan_keeps_partial_results_and_is_recorded_as_cancelled()
         {
             var session = new FakeSession { Entries = new List<ScanEntry> { new ScanEntry { Path = "\\a.txt" } } };
-            var eng = new FakeEngine { Available = true, OpenResult = new NtfsScanOpenResult { Status = EngineStatus.Ok, Session = session } };
+            var eng = new FakeEngine { Available = true, OpenResult = new ScanOpenResult { Status = EngineStatus.Ok, Session = session } };
             var hist = new FakeHistory();
             var cts = new CancellationTokenSource(); cts.Cancel();
-            var o = new QuickScanService(eng, hist, new NullLogger()).RunAsync(Ntfs(), new AppSettings(), null, cts.Token).Result;
+            var o = new ScanService(eng, hist, new NullLogger()).RunAsync(Ntfs(), ScanMode.Quick, new AppSettings(), null, cts.Token).Result;
             Assert.IsTrue(o.Cancelled);
             Assert.IsTrue(o.HasResults);
             Assert.AreEqual("Cancelled", hist.Sessions.Single().Status);
@@ -255,9 +259,9 @@ namespace RecoverX.CoreTests
         public void Failed_scan_closes_the_session_and_is_recorded_as_failed()
         {
             var session = new FakeSession { RunStatus = EngineStatus.IoError };
-            var eng = new FakeEngine { Available = true, OpenResult = new NtfsScanOpenResult { Status = EngineStatus.Ok, Session = session } };
+            var eng = new FakeEngine { Available = true, OpenResult = new ScanOpenResult { Status = EngineStatus.Ok, Session = session } };
             var hist = new FakeHistory();
-            var o = new QuickScanService(eng, hist, new NullLogger()).RunAsync(Ntfs(), new AppSettings(), null, CancellationToken.None).Result;
+            var o = new ScanService(eng, hist, new NullLogger()).RunAsync(Ntfs(), ScanMode.Quick, new AppSettings(), null, CancellationToken.None).Result;
             Assert.AreEqual(EngineStatus.IoError, o.Status);
             Assert.IsFalse(o.HasResults);
             Assert.IsTrue(session.Disposed);

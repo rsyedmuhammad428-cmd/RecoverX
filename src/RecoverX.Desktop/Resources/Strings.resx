@@ -21,9 +21,9 @@
   <data name="Dash_Welcome" xml:space="preserve"><value>Welcome to RecoverX</value></data>
   <data name="Dash_QuickScan" xml:space="preserve"><value>Quick Scan</value></data>
   <data name="Dash_DeepScan" xml:space="preserve"><value>Deep Scan</value></data>
-  <data name="Dash_QuickScan_Tip" xml:space="preserve"><value>Choose a drive to scan.</value></data>
-  <data name="Dash_DeepScan_Tip" xml:space="preserve"><value>Deep Scan (file signatures) arrives in Phase 4.</value></data>
-  <data name="Dash_ScanNote" xml:space="preserve"><value>Quick Scan finds deleted files on NTFS drives. Deep Scan arrives in a later phase.</value></data>
+  <data name="Dash_QuickScan_Tip" xml:space="preserve"><value>Choose an NTFS, FAT32 or exFAT drive, then press Quick Scan on its card.</value></data>
+  <data name="Dash_DeepScan_Tip" xml:space="preserve"><value>Choose a drive, then press Deep Scan on its card. Searches the drive's data for file signatures; works on NTFS, FAT32 and exFAT.</value></data>
+  <data name="Dash_ScanNote" xml:space="preserve"><value>Quick Scan reads the drive's file records (NTFS, FAT32, exFAT) and keeps original names and folders. Deep Scan searches the raw data for known file types (photos, videos, documents, audio, archives) on any drive, including formatted ones, but cannot recover original names.</value></data>
   <data name="Dash_Drives" xml:space="preserve"><value>Available drives</value></data>
   <data name="Dash_Stats" xml:space="preserve"><value>Recovery statistics</value></data>
   <data name="Dash_Stat_Scans" xml:space="preserve"><value>Scans run</value></data>
@@ -60,7 +60,7 @@
   <data name="Drive_NotReady" xml:space="preserve"><value>Not ready / inaccessible</value></data>
   <data name="Drive_FsUnknown" xml:space="preserve"><value>Unknown</value></data>
   <data name="Drive_Scan" xml:space="preserve"><value>Quick Scan</value></data>
-  <data name="Drive_Scan_Tip" xml:space="preserve"><value>Looks for deleted files in the NTFS file table. Read-only; needs administrator rights.</value></data>
+  <data name="Drive_Scan_Tip" xml:space="preserve"><value>Looks for deleted files in the drive's own file records (NTFS, FAT32, exFAT) and keeps their names and folders. Read-only; needs administrator rights.</value></data>
   <data name="Drive_Verify" xml:space="preserve"><value>Verify read access</value></data>
   <data name="Drive_Verify_Tip" xml:space="preserve"><value>Opens the drive read-only and reads its first sector. Needs administrator rights.</value></data>
   <data name="Media_SSD" xml:space="preserve"><value>SSD / flash</value></data>
@@ -139,7 +139,7 @@ Total size: {3}</value></data>
   <data name="Set_ScanPrefs" xml:space="preserve"><value>Scan preferences</value></data>
   <data name="Set_ScanType_Default" xml:space="preserve"><value>Default scan type</value></data>
   <data name="Set_MinFileSize" xml:space="preserve"><value>Ignore files smaller than (KB)</value></data>
-  <data name="Set_ScanPrefs_Note" xml:space="preserve"><value>Stored now and applied when scanning arrives in a later phase.</value></data>
+  <data name="Set_ScanPrefs_Note" xml:space="preserve"><value>File categories and the minimum size hide results you do not want; they never change what is read from the drive.</value></data>
   <data name="Set_Categories" xml:space="preserve"><value>File categories</value></data>
   <data name="Set_Categories_Note" xml:space="preserve"><value>Choose which kinds of files scans should report. Extensions are comma-separated, without dots.</value></data>
   <data name="Set_Cat_Save" xml:space="preserve"><value>Save categories</value></data>
@@ -156,8 +156,8 @@ Total size: {3}</value></data>
   <data name="Set_Preview" xml:space="preserve"><value>Preview</value></data>
   <data name="Set_Preview_Enable" xml:space="preserve"><value>Enable file preview</value></data>
   <data name="Set_Preview_MaxSize" xml:space="preserve"><value>Largest file to preview (MB)</value></data>
-  <data name="Set_Preview_Formats" xml:space="preserve"><value>Planned preview formats: JPG, JPEG, PNG, BMP, PDF, TXT</value></data>
-  <data name="Set_Preview_Note" xml:space="preserve"><value>Stored now and applied when previews arrive in a later phase.</value></data>
+  <data name="Set_Preview_Formats" xml:space="preserve"><value>Preview formats: JPG, JPEG, PNG, BMP, GIF (image), TXT and similar text files (first 64 KB), PDF (document details and a text sample; pages are not rendered).</value></data>
+  <data name="Set_Preview_Note" xml:space="preserve"><value>Previews read the file's data from the drive (read-only) when you select it. Damaged files may preview incorrectly or not at all.</value></data>
   <data name="Set_History" xml:space="preserve"><value>Scan history</value></data>
   <data name="Set_History_Max" xml:space="preserve"><value>Keep at most this many scan history entries</value></data>
   <data name="Set_Prefs_Save" xml:space="preserve"><value>Save preferences</value></data>
@@ -171,7 +171,7 @@ Total size: {3}</value></data>
   <data name="About_Title" xml:space="preserve"><value>About RecoverX</value></data>
   <data name="About_Version" xml:space="preserve"><value>Version {0}</value></data>
   <data name="About_StatusTitle" xml:space="preserve"><value>Current status</value></data>
-  <data name="About_Status" xml:space="preserve"><value>Phase 3 build: NTFS Quick Scan and file recovery. Deep Scan and FAT32/exFAT support are not implemented yet.</value></data>
+  <data name="About_Status" xml:space="preserve"><value>Phase 5 build: Quick Scan for NTFS, FAT32 and exFAT (original names and folders), Deep Scan (file signatures, free space only on these file systems), search and filters, file preview, and safe recovery.</value></data>
   <data name="About_LimitsTitle" xml:space="preserve"><value>Limitations</value></data>
   <data name="About_Limits" xml:space="preserve"><value>Recovery is never guaranteed. Overwritten data may be unrecoverable, SSD TRIM can permanently erase deleted data, encrypted storage may prevent recovery, and physically damaged drives may need professional recovery.</value></data>
   <data name="About_EnvTitle" xml:space="preserve"><value>Environment</value></data>
@@ -185,10 +185,10 @@ Total size: {3}</value></data>
   <data name="Env_Bits64" xml:space="preserve"><value>64-bit</value></data>
   <data name="Env_Bits32" xml:space="preserve"><value>32-bit</value></data>
   <data name="About_Compat" xml:space="preserve"><value>Compatibility with Windows 7 SP1, 10 and 11 is not claimed until it has been tested on those systems.</value></data>
-  <data name="Drive_Scan_NotNtfs" xml:space="preserve"><value>Quick Scan supports NTFS drives only. FAT32 and exFAT support arrives in a later phase.</value></data>
+  <data name="Drive_Scan_NotNtfs" xml:space="preserve"><value>Quick Scan supports NTFS, FAT32 and exFAT drives. Use Deep Scan for this drive.</value></data>
   <data name="Dash_Stat_Recovered" xml:space="preserve"><value>Files recovered</value></data>
   <data name="Scan_Title" xml:space="preserve"><value>Recover Files</value></data>
-  <data name="Scan_Idle" xml:space="preserve"><value>Choose a drive on the Drive Scan page and press Quick Scan.</value></data>
+  <data name="Scan_Idle" xml:space="preserve"><value>Choose a drive on the Drive Scan page and press Quick Scan or Deep Scan.</value></data>
   <data name="Scan_GoToDrives" xml:space="preserve"><value>Go to Drive Scan</value></data>
   <data name="Scan_Scanning" xml:space="preserve"><value>Scanning {0}</value></data>
   <data name="Scan_Cancel" xml:space="preserve"><value>Cancel</value></data>
@@ -200,28 +200,21 @@ Total size: {3}</value></data>
   <data name="Scan_Progress" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="Scan_Candidates" xml:space="preserve"><value>{0} deleted files found so far</value></data>
   <data name="Scan_Confirm_Title" xml:space="preserve"><value>Start Quick Scan</value></data>
-  <data name="Scan_Confirm_Body" xml:space="preserve"><value>RecoverX will read the file table of {0} (read-only) to look for deleted files. Nothing is written to the drive. Continue?</value></data>
-  <data name="Scan_Summary" xml:space="preserve"><value>Found {0} deleted file(s) on {1}. Showing {2}.</value></data>
-  <data name="Scan_Summary_Verified" xml:space="preserve"><value>{0} look intact (the data area is unused and the file header matches).</value></data>
-  <data name="Scan_Summary_Likely" xml:space="preserve"><value>{0} are probably recoverable (data area unused; the file type could not be verified).</value></data>
-  <data name="Scan_Summary_Risky" xml:space="preserve"><value>{0} are partly or fully overwritten, empty, or not supported yet.</value></data>
+  <data name="Scan_Confirm_Body" xml:space="preserve"><value>RecoverX will read the file records of {0} (read-only) to look for deleted files. Nothing is written to the drive. Continue?</value></data>
   <data name="Scan_Hidden_Filters" xml:space="preserve"><value>{0} file(s) hidden by your Settings (file categories and minimum size).</value></data>
-  <data name="Scan_Hidden_Condition" xml:space="preserve"><value>{0} file(s) hidden because they are unlikely to be recoverable.</value></data>
   <data name="Scan_Truncated" xml:space="preserve"><value>Listing stopped after {0} files. Narrow the file categories or raise the minimum size in Settings and scan again.</value></data>
-  <data name="Scan_DisplayCap" xml:space="preserve"><value>Showing the first {0} files only. Search and filters arrive in a later phase.</value></data>
   <data name="Scan_Cancelled" xml:space="preserve"><value>Scan cancelled. The results below were found before cancelling and may be incomplete.</value></data>
   <data name="Scan_Failed" xml:space="preserve"><value>The scan could not be completed: {0}</value></data>
   <data name="Scan_BitmapMissing" xml:space="preserve"><value>The drive's cluster map could not be read, so overwritten files cannot be detected. Treat every result with caution.</value></data>
   <data name="Scan_MftPartial" xml:space="preserve"><value>The file table is fragmented in a way this version cannot fully follow, so some files may be missing.</value></data>
   <data name="Scan_BadRecords" xml:space="preserve"><value>{0} damaged file-table records were skipped.</value></data>
   <data name="Scan_Err_Denied" xml:space="preserve"><value>Windows denied access to {0}. Scanning needs administrator rights. Use "Restart as administrator" on the Drive Scan page.</value></data>
-  <data name="Scan_Err_NotNtfs" xml:space="preserve"><value>{0} cannot be read as NTFS. It may use another file system, be encrypted (for example with BitLocker), or be damaged. Quick Scan supports readable NTFS drives only.</value></data>
+  <data name="Scan_Err_NotNtfs" xml:space="preserve"><value>{0} cannot be read as NTFS, FAT32 or exFAT. It may use another file system, be encrypted (for example with BitLocker), or be damaged. Try Deep Scan, which does not need the file system.</value></data>
   <data name="Scan_Err_Corrupt" xml:space="preserve"><value>The NTFS structures on {0} are too damaged to read.</value></data>
   <data name="Scan_Err_Engine" xml:space="preserve"><value>The native engine is not available: {0}</value></data>
   <data name="Scan_Err_NotFound" xml:space="preserve"><value>{0} could not be found. It may have been removed.</value></data>
   <data name="Scan_Err_Generic" xml:space="preserve"><value>Unexpected error ({0}).</value></data>
-  <data name="Scan_ShowRecoverableOnly" xml:space="preserve"><value>Show only files likely to be recoverable</value></data>
-  <data name="Scan_SelectRecoverable" xml:space="preserve"><value>Select all likely recoverable</value></data>
+  <data name="Scan_SelectRecoverable" xml:space="preserve"><value>Select shown Excellent</value></data>
   <data name="Scan_ClearSelection" xml:space="preserve"><value>Clear selection</value></data>
   <data name="Scan_Selected" xml:space="preserve"><value>{0} selected ({1})</value></data>
   <data name="Scan_Destination" xml:space="preserve"><value>Recover to</value></data>
@@ -230,8 +223,7 @@ Total size: {3}</value></data>
   <data name="Scan_Recover" xml:space="preserve"><value>Recover selected files</value></data>
   <data name="Scan_Col_Name" xml:space="preserve"><value>Name</value></data>
   <data name="Scan_Col_Size" xml:space="preserve"><value>Size</value></data>
-  <data name="Scan_Col_Modified" xml:space="preserve"><value>Modified</value></data>
-  <data name="Scan_Col_Condition" xml:space="preserve"><value>Condition</value></data>
+  <data name="Scan_Col_Condition" xml:space="preserve"><value>Recovery condition</value></data>
   <data name="Scan_PathUncertain" xml:space="preserve"><value>Original folder uncertain</value></data>
   <data name="Cond_Verified" xml:space="preserve"><value>Looks intact</value></data>
   <data name="Cond_Likely" xml:space="preserve"><value>Probably recoverable</value></data>
@@ -291,4 +283,113 @@ Files are copied to a new folder there. Nothing on {3} is modified. Continue?</v
   <data name="Status_Unverified" xml:space="preserve"><value>Unverified</value></data>
   <data name="Status_Verified" xml:space="preserve"><value>Verified</value></data>
   <data name="Status_Suspect" xml:space="preserve"><value>Needs attention</value></data>
+  <data name="Drive_DeepScan" xml:space="preserve"><value>Deep Scan</value></data>
+  <data name="Drive_DeepScan_Tip" xml:space="preserve"><value>Searches the drive's data for known file types (photos, videos, documents, audio, archives). Works on any file system, also after formatting. Read-only; needs administrator rights. Can take a long time on large drives.</value></data>
+  <data name="Drive_DeepScan_NotReady" xml:space="preserve"><value>The drive is not ready.</value></data>
+  <data name="Deep_Scanning" xml:space="preserve"><value>Deep Scan of {0}</value></data>
+  <data name="Deep_Confirm_Title" xml:space="preserve"><value>Start Deep Scan</value></data>
+  <data name="Deep_Confirm_Body" xml:space="preserve"><value>RecoverX will read {0} ({1}) sector by sector (read-only) and look for known file types. Nothing is written to the drive. On NTFS, FAT32 and exFAT only free space is searched; otherwise the whole drive is read. This can take a long time; you can pause or stop it and keep what was found. Continue?</value></data>
+  <data name="Deep_Phase_Scanning" xml:space="preserve"><value>Searching for file signatures...</value></data>
+  <data name="Deep_Progress" xml:space="preserve"><value>{0} of {1} examined ({2}%)</value></data>
+  <data name="Deep_Found" xml:space="preserve"><value>{0} files found so far</value></data>
+  <data name="Deep_TimeNote" xml:space="preserve"><value>Deep Scan reads every searched sector of the drive. Pause frees the drive for a while; Stop keeps the files found so far.</value></data>
+  <data name="Deep_AllSpace" xml:space="preserve"><value>Space used by existing files was searched too (Settings), so results can include files that were never deleted.</value></data>
+  <data name="Deep_NoMapNtfs" xml:space="preserve"><value>The drive's free-space map could not be read, so the whole drive was searched. Results can include files that still exist.</value></data>
+  <data name="Deep_NoMap" xml:space="preserve"><value>The drive's file system could not be read, so the whole drive was searched. Results can include files that still exist.</value></data>
+  <data name="Deep_ReadErrors" xml:space="preserve"><value>{0} region(s) of the drive could not be read and were skipped. The drive may be failing; consider a professional service before using it further.</value></data>
+  <data name="Deep_Contiguous" xml:space="preserve"><value>Deep Scan cannot recover original file names or folders. It assumes each file is stored in one piece: fragmented or partly overwritten files are rated Partial or Poor, never Excellent.</value></data>
+  <data name="Deep_Summary" xml:space="preserve"><value>Deep Scan found {0} file(s) by signature on {1}.</value></data>
+  <data name="Scan_Summary_All" xml:space="preserve"><value>Quick Scan found {0} deleted file(s) on {1}.</value></data>
+  <data name="Scan_Summary_Ratings" xml:space="preserve"><value>Excellent: {0}   Partial: {1}   Poor: {2}   Not recoverable: {3}</value></data>
+  <data name="Scan_Paused" xml:space="preserve"><value>Paused. The drive is not being read.</value></data>
+  <data name="Scan_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Scan_Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Scan_StopKeep" xml:space="preserve"><value>Stop</value></data>
+  <data name="Scan_StopKeep_Tip" xml:space="preserve"><value>Stops the scan and shows the files found so far.</value></data>
+  <data name="Scan_SelectShown" xml:space="preserve"><value>Select all shown</value></data>
+  <data name="Scan_Col_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Scan_Col_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Scan_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Scan_Browse" xml:space="preserve"><value>Browse...</value></data>
+  <data name="Scan_Browse_Title" xml:space="preserve"><value>Choose the folder to recover files into. It must be on a different drive than the one being recovered.</value></data>
+  <data name="Rating_Excellent" xml:space="preserve"><value>Excellent</value></data>
+  <data name="Rating_Partial" xml:space="preserve"><value>Partial</value></data>
+  <data name="Rating_Poor" xml:space="preserve"><value>Poor</value></data>
+  <data name="Rating_NotRecoverable" xml:space="preserve"><value>Not recoverable</value></data>
+  <data name="Rating_Estimate" xml:space="preserve"><value>Ratings are estimates based on what could be checked on the drive. They do not guarantee that a recovered file will open.</value></data>
+  <data name="CarveTip_Checksum" xml:space="preserve"><value>Found by signature. Its structure was followed to its end and its checksums match.</value></data>
+  <data name="CarveTip_Verified" xml:space="preserve"><value>Found by signature. Its structure was followed from the header to the end marker without errors.</value></data>
+  <data name="CarveTip_Likely" xml:space="preserve"><value>Found by signature. Its size is known, but its content could not be fully checked.</value></data>
+  <data name="CarveTip_Partial" xml:space="preserve"><value>Found by signature, but its structure breaks part-way (fragmented or partly overwritten). Only the part that checked out will be recovered.</value></data>
+  <data name="CarveTip_Truncated" xml:space="preserve"><value>Found by signature, but it runs past the end of the drive or the size limit. The recovered file will be incomplete.</value></data>
+  <data name="CarveTip_Lost" xml:space="preserve"><value>Only the file's header could be confirmed.</value></data>
+  <data name="CarveTip_InUse" xml:space="preserve"><value>{0} of {1} clusters it covers now belong to existing files, so part of the data may have been overwritten.</value></data>
+  <data name="CarveTip_InUseChecksum" xml:space="preserve"><value>{0} of {1} clusters it covers are marked in use, but all checksums still match, so the data is intact.</value></data>
+  <data name="Filter_Search" xml:space="preserve"><value>Search name or path</value></data>
+  <data name="Filter_Type" xml:space="preserve"><value>File type</value></data>
+  <data name="Filter_Rating" xml:space="preserve"><value>Condition</value></data>
+  <data name="Filter_Size" xml:space="preserve"><value>Size</value></data>
+  <data name="Filter_DateFrom" xml:space="preserve"><value>Date from</value></data>
+  <data name="Filter_DateTo" xml:space="preserve"><value>Date to</value></data>
+  <data name="Filter_Sort" xml:space="preserve"><value>Sort by</value></data>
+  <data name="Filter_Descending" xml:space="preserve"><value>Descending</value></data>
+  <data name="Filter_Reset" xml:space="preserve"><value>Reset filters</value></data>
+  <data name="Filter_AllTypes" xml:space="preserve"><value>All types</value></data>
+  <data name="Filter_AllRatings" xml:space="preserve"><value>All conditions</value></data>
+  <data name="Filter_AnySize" xml:space="preserve"><value>Any size</value></data>
+  <data name="Filter_Under1Mb" xml:space="preserve"><value>Under 1 MB</value></data>
+  <data name="Filter_1To100Mb" xml:space="preserve"><value>1 MB - 100 MB</value></data>
+  <data name="Filter_Over100Mb" xml:space="preserve"><value>Over 100 MB</value></data>
+  <data name="Filter_Shown" xml:space="preserve"><value>Showing {0} of {1}</value></data>
+  <data name="Sort_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Sort_Size" xml:space="preserve"><value>Size</value></data>
+  <data name="Sort_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Sort_Rating" xml:space="preserve"><value>Condition</value></data>
+  <data name="Sort_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Preview_Title" xml:space="preserve"><value>Preview</value></data>
+  <data name="Preview_Hint" xml:space="preserve"><value>Select a file to preview it. Images (JPG, PNG, BMP, GIF), PDF and any text file are shown; other files show their first bytes. Dates marked * come from inside the file (photo or video).</value></data>
+  <data name="Preview_Loading" xml:space="preserve"><value>Reading the file from the drive...</value></data>
+  <data name="Preview_NotSupported" xml:space="preserve"><value>No preview is available for this file type.</value></data>
+  <data name="Preview_DamagedWarning" xml:space="preserve"><value>This file may be damaged. The preview shows the data as it was found.</value></data>
+  <data name="Preview_DecodeFailed" xml:space="preserve"><value>The image could not be displayed. Its data may be damaged or incomplete.</value></data>
+  <data name="Preview_TextTruncated" xml:space="preserve"><value>(Preview shows the first 64 KB only.)</value></data>
+  <data name="Preview_Empty" xml:space="preserve"><value>The file contains no text.</value></data>
+  <data name="Preview_Disabled" xml:space="preserve"><value>Preview is turned off in Settings.</value></data>
+  <data name="Preview_TooLarge" xml:space="preserve"><value>This file ({0}) is larger than the preview limit in Settings.</value></data>
+  <data name="Preview_NoData" xml:space="preserve"><value>This file has no data that can be read.</value></data>
+  <data name="Preview_ReadFailed" xml:space="preserve"><value>The file could not be read for preview: {0}</value></data>
+  <data name="Preview_Pdf_Version" xml:space="preserve"><value>PDF version: {0}</value></data>
+  <data name="Preview_Pdf_Pages" xml:space="preserve"><value>Pages: {0}</value></data>
+  <data name="Preview_Pdf_Title" xml:space="preserve"><value>Title: {0}</value></data>
+  <data name="Preview_Pdf_Author" xml:space="preserve"><value>Author: {0}</value></data>
+  <data name="Preview_Pdf_Producer" xml:space="preserve"><value>Created with: {0}</value></data>
+  <data name="Preview_Pdf_Encrypted" xml:space="preserve"><value>The document is encrypted; its text cannot be shown.</value></data>
+  <data name="Preview_Pdf_TextHeader" xml:space="preserve"><value>Text found in the document (layout not shown):</value></data>
+  <data name="Preview_Pdf_NoText" xml:space="preserve"><value>No readable text was found (the PDF may contain only images, or use embedded font encodings).</value></data>
+  <data name="Set_ScanType_Note" xml:space="preserve"><value>The default scan is listed first on each drive card.</value></data>
+  <data name="Set_DeepAllSpace" xml:space="preserve"><value>Deep Scan: also search space used by existing files</value></data>
+  <data name="Set_DeepAllSpace_Note" xml:space="preserve"><value>Off: only free space is searched, so existing files are not listed. On: slower, and results include files that were never deleted.</value></data>
+  <data name="Preview_Erased" xml:space="preserve"><value>The data of this file ({0}) reads back as all zeros: it was erased, usually by SSD TRIM after deletion, or overwritten with zeros. There is nothing left to preview, and the recovered file will be empty.</value></data>
+  <data name="Preview_HexHeader" xml:space="preserve"><value>No viewer for this content. First bytes of the file (hex):</value></data>
+  <data name="Preview_HexTruncated" xml:space="preserve"><value>(Only the first 4 KB are shown.)</value></data>
+  <data name="Preview_TypeMismatch" xml:space="preserve"><value>The name says {0}, but the content is not a {0} file. It may have been overwritten, or it is not what its name suggests.</value></data>
+  <data name="Scan_NameGuessed" xml:space="preserve"><value>First letter of the name was lost on deletion (shown as _)</value></data>
+  <data name="Scan_Err_NotFat" xml:space="preserve"><value>{0} cannot be read as FAT32 or exFAT. It may be damaged. Try Deep Scan, which does not need the file system.</value></data>
+  <data name="Fat_Contiguous" xml:space="preserve"><value>FAT32 erases a deleted file's list of clusters, so RecoverX reads each file as one continuous piece. Files that were stored in pieces (fragmented) may be rated Partial or come back damaged; check them with Preview.</value></data>
+  <data name="ScanType_Snapshot" xml:space="preserve"><value>Restore points</value></data>
+  <data name="Drive_Snapshots" xml:space="preserve"><value>Restore points (Previous Versions)</value></data>
+  <data name="Drive_Snapshots_Tip" xml:space="preserve"><value>Looks for deleted files in Windows restore points (shadow copies) of this drive. Works even on SSDs with TRIM, if a restore point was made before the file was deleted. Read-only; needs administrator rights.</value></data>
+  <data name="Drive_Snapshots_NotNtfs" xml:space="preserve"><value>Windows keeps restore points only for NTFS drives.</value></data>
+  <data name="Snap_Scanning" xml:space="preserve"><value>Searching restore points of {0}</value></data>
+  <data name="Snap_Confirm_Title" xml:space="preserve"><value>Search restore points</value></data>
+  <data name="Snap_Confirm_Body" xml:space="preserve"><value>RecoverX will compare the Windows restore points (shadow copies) of {0} with the drive and list files that existed in a restore point but are gone now. Nothing is changed. System folders, program folders and AppData are skipped. Continue?</value></data>
+  <data name="Snap_Phase" xml:space="preserve"><value>Comparing restore points with the drive...</value></data>
+  <data name="Snap_Progress" xml:space="preserve"><value>{0} of {1} folders checked</value></data>
+  <data name="Snap_Found" xml:space="preserve"><value>{0} deleted files found in restore points so far</value></data>
+  <data name="Snap_None" xml:space="preserve"><value>Windows has no restore points for {0}, so there is nothing to search. (System Protection may be turned off for this drive. For the future, turn it on in Control Panel &gt; System &gt; System Protection, or use File History / OneDrive.)</value></data>
+  <data name="Snap_NotSupported" xml:space="preserve"><value>Windows keeps restore points only for NTFS drives; {0} is not NTFS.</value></data>
+  <data name="Snap_Info" xml:space="preserve"><value>Searched {0} restore point(s). Each file is an exact copy of the file as it was when that restore point was made; the newest copy is listed. System, program and AppData folders were skipped.</value></data>
+  <data name="Snap_Unreadable" xml:space="preserve"><value>{0} folder(s) in restore points could not be read and were skipped.</value></data>
+  <data name="Snap_Summary" xml:space="preserve"><value>Found {0} file(s) in restore points of {1} that no longer exist on the drive.</value></data>
+  <data name="Snap_Tip" xml:space="preserve"><value>Copied from a Windows restore point made {0}. The file is intact as of that moment; later changes to it are not included.</value></data>
 </root>

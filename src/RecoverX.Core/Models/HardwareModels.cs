@@ -14,7 +14,7 @@ namespace RecoverX.Core.Models
     public enum EngineStatus
     {
         Unavailable = -1, Ok = 0, InvalidArgument = 1, BufferTooSmall = 2, AccessDenied = 3, NotFound = 4,
-        IoError = 5, Unsupported = 6, Cancelled = 7, NotNtfs = 8, Corrupt = 9, Internal = 99
+        IoError = 5, Unsupported = 6, Cancelled = 7, NotNtfs = 8, Corrupt = 9, NotFat = 10, Internal = 99
     }
 
     public enum FileSystemId { Unknown = 0, Ntfs = 1, Fat32 = 2, ExFat = 3, Fat16 = 4, Fat12 = 5 }

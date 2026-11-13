@@ -7,7 +7,7 @@
             <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
                 <Button Content="{loc:Loc Dash_QuickScan}" Command="{Binding QuickScanCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0"
                         ToolTip="{loc:Loc Dash_QuickScan_Tip}"/>
-                <Button Content="{loc:Loc Dash_DeepScan}" IsEnabled="False" Style="{StaticResource PrimaryButton}"
+                <Button Content="{loc:Loc Dash_DeepScan}" Command="{Binding DeepScanCommand}" Style="{StaticResource PrimaryButton}"
                         ToolTip="{loc:Loc Dash_DeepScan_Tip}"/>
             </StackPanel>
             <TextBlock Text="{loc:Loc Dash_ScanNote}" Style="{StaticResource Muted}" Margin="0,6,0,0"/>

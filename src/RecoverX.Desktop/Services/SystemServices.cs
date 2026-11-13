@@ -10,6 +10,8 @@ namespace RecoverX.Desktop.Services
     {
         bool Confirm(string title, string message);
         void Info(string title, string message);
+        /// <summary>Folder picker. Returns null if cancelled.</summary>
+        string PickFolder(string description, string initialPath);
     }
 
     public sealed class WpfDialogService : IDialogService
@@ -21,6 +23,17 @@ namespace RecoverX.Desktop.Services
         public void Info(string title, string message)
         {
             MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        public string PickFolder(string description, string initialPath)
+        {
+            // WinForms FolderBrowserDialog: part of .NET Framework 4.8 and available on Windows 7; no extra dependency.
+            using (var d = new System.Windows.Forms.FolderBrowserDialog { Description = description, ShowNewFolderButton = true })
+            {
+                try { if (!string.IsNullOrWhiteSpace(initialPath) && System.IO.Directory.Exists(initialPath)) d.SelectedPath = initialPath; }
+                catch (Exception) { /* invalid path text: start without a selection */ }
+                return d.ShowDialog() == System.Windows.Forms.DialogResult.OK ? d.SelectedPath : null;
+            }
         }
     }
 

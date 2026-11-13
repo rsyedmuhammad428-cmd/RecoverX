@@ -3,7 +3,19 @@
     <RootNamespace>RecoverX.CoreTests</RootNamespace>
     <AssemblyName>RecoverX.CoreTests</AssemblyName>
     <IsPackable>false</IsPackable>
+    <NativeBinDir>$(MSBuildThisFileDirectory)..\..\native-bin\</NativeBinDir>
   </PropertyGroup>
+  <!-- The real engine, for the managed/native integration tests (reported as inconclusive when it has not been built) -->
+  <ItemGroup>
+    <None Include="$(NativeBinDir)x64\recoverx_engine.dll" Condition="Exists('$(NativeBinDir)x64\recoverx_engine.dll')">
+      <Link>x64\recoverx_engine.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="$(NativeBinDir)x86\recoverx_engine.dll" Condition="Exists('$(NativeBinDir)x86\recoverx_engine.dll')">
+      <Link>x86\recoverx_engine.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />

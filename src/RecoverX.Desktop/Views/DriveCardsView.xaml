@@ -47,10 +47,22 @@
                                     Command="{Binding DataContext.VerifyAccessCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                     CommandParameter="{Binding}" IsEnabled="{Binding IsReady}"
                                     Style="{StaticResource PrimaryButton}" Margin="0,12,0,0"/>
-                            <Button Content="{loc:Loc Drive_Scan}" ToolTip="{Binding ScanTooltip}"
-                                    Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                    CommandParameter="{Binding}" IsEnabled="{Binding CanScan}"
-                                    Style="{StaticResource PrimaryButton}" Margin="0,8,0,0"/>
+                            <!-- The default scan type (Settings) is listed first -->
+                            <Grid>
+                                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                <Button Grid.Row="{Binding QuickRow}" Content="{loc:Loc Drive_Scan}" ToolTip="{Binding ScanTooltip}"
+                                        Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}" IsEnabled="{Binding CanScan}"
+                                        Style="{StaticResource PrimaryButton}" Margin="0,8,0,0"/>
+                                <Button Grid.Row="{Binding DeepRow}" Content="{loc:Loc Drive_DeepScan}" ToolTip="{Binding DeepScanTooltip}"
+                                        Command="{Binding DataContext.DeepScanCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}" IsEnabled="{Binding CanDeepScan}"
+                                        Style="{StaticResource PrimaryButton}" Margin="0,8,0,0"/>
+                                <Button Grid.Row="2" Content="{loc:Loc Drive_Snapshots}" ToolTip="{Binding SnapshotTooltip}"
+                                        Command="{Binding DataContext.SnapshotCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}" IsEnabled="{Binding CanSnapshot}"
+                                        Style="{StaticResource SecondaryButton}" Margin="0,8,0,0" Padding="12,8"/>
+                            </Grid>
                         </StackPanel>
                     </Border>
                 </DataTemplate>

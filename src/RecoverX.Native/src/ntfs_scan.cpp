@@ -138,6 +138,34 @@ struct RxNtfsScan {
         return apply_fixups(rec.data(), g.record_size);
     }
 
+    // Byte `byte` of $Bitmap (8 clusters), or -1 if unreadable.
+    int bitmap_byte(uint64_t byte) {
+        if (!bitmap_ok || byte >= bm_size) return -1;
+        uint64_t ws = (byte / kBitmapWindow) * kBitmapWindow;
+        if (ws != bm_win_start) {
+            uint32_t want = (uint32_t)std::min<uint64_t>(kBitmapWindow, bm_size - ws), got = 0;
+            bm_win.assign(want, 0);
+            RunReader rr(src, g.cluster_size, bm_runs, bm_size, bm_size);
+            if (rr.read(ws, bm_win.data(), want, &got) != RX_OK || got != want) { bm_win_start = ~0ull; return -1; }
+            bm_win_start = ws;
+        }
+        return bm_win[(size_t)(byte - ws)];
+    }
+
+    // First cluster >= from (and < total_clusters) whose allocation bit equals `used`; total_clusters if none, ~0 on error.
+    uint64_t next_with_state(uint64_t from, bool used) {
+        uint64_t c = from;
+        const uint8_t skip = used ? 0x00 : 0xFF;      // whole bytes that cannot contain the wanted state
+        while (c < g.total_clusters) {
+            int v = bitmap_byte(c / 8);
+            if (v < 0) return ~0ull;
+            if ((c % 8) == 0 && (uint8_t)v == skip) { c += 8; continue; }
+            if ((((v >> (c % 8)) & 1) != 0) == used) return c;
+            ++c;
+        }
+        return g.total_clusters;
+    }
+
     // Number of allocated clusters in [lcn, lcn+len), or -1 if the bitmap cannot be read.
     int64_t bitmap_count(uint64_t lcn, uint64_t len) {
         if (!bitmap_ok) return -1;
@@ -298,7 +326,7 @@ RX_API RxStatus rx_ntfs_scan_run(RxScanHandle s, RxCancelHandle cancel) {
         bool cancelled = false;
 
         for (uint64_t start = 0; start < nrec && !cancelled; start += chunk_recs) {
-            if (rx_cancel_is_requested(cancel)) { cancelled = true; break; }
+            if (rx::poll_cancel(cancel, &s->pflags, RX_SCANP_PAUSED)) { cancelled = true; break; }
             uint32_t n = (uint32_t)std::min<uint64_t>(chunk_recs, nrec - start), got = 0;
             RxStatus rs = mft.read(start * g.record_size, buf.data(), n * g.record_size, &got);
             if (rs != RX_OK) { s->bad += n; s->rec_done = (uint32_t)(start + n); continue; }   // unreadable region: count and move on
@@ -361,7 +389,7 @@ RX_API RxStatus rx_ntfs_scan_run(RxScanHandle s, RxCancelHandle cancel) {
             const bool check_content = (s->opts.flags & RX_SCANF_VALIDATE_CONTENT) != 0;
             uint32_t done = 0;
             for (uint32_t oi : order) {
-                if ((done++ & 63) == 0 && rx_cancel_is_requested(cancel)) { cancelled = true; break; }
+                if ((done++ & 63) == 0 && rx::poll_cancel(cancel, &s->pflags, RX_SCANP_PAUSED)) { cancelled = true; break; }
                 s->rec_done = done;
                 Cand& c = cands[oi];
                 Entry& e = c.e;
@@ -499,6 +527,29 @@ RX_API void rx_ntfs_scan_destroy(RxScanHandle s) { delete s; }
 } // extern "C"
 
 namespace rx {
+bool ntfs_alloc_geometry(RxScanHandle s, uint32_t& cluster_size, uint64_t& total_clusters) {
+    if (!s || !s->bitmap_ok) return false;
+    cluster_size = s->g.cluster_size; total_clusters = s->g.total_clusters;
+    return true;
+}
+
+int64_t ntfs_used_clusters(RxScanHandle s, uint64_t lcn, uint64_t len) {
+    if (!s || !s->bitmap_ok) return -1;
+    if (lcn >= s->g.total_clusters) return -1;
+    if (len > s->g.total_clusters - lcn) len = s->g.total_clusters - lcn;
+    return s->bitmap_count(lcn, len);
+}
+
+bool ntfs_find_run(RxScanHandle s, uint64_t from, bool used, uint64_t& start, uint64_t& end) {
+    if (!s || !s->bitmap_ok) return false;
+    uint64_t a = s->next_with_state(from, used);
+    if (a == ~0ull || a >= s->g.total_clusters) return false;
+    uint64_t b = s->next_with_state(a, !used);
+    if (b == ~0ull) b = s->g.total_clusters;
+    start = a; end = b;
+    return true;
+}
+
 int ntfs_debug_run_count(RxScanHandle s, uint32_t index) {
     if (!s || index >= s->results.size()) return -1;
     std::vector<uint8_t> rec;

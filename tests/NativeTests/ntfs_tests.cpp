@@ -214,7 +214,7 @@ static void test_struct_layout() {
     rx_ntfs_scan_destroy(nullptr);
 }
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(RX_ALLOW_IMAGE_FILES)
 // ------------------------------------------------------------------ volume tests (real NTFS image)
 #ifndef RX_FIXTURE_DIR
 #define RX_FIXTURE_DIR "."
@@ -525,15 +525,19 @@ int main(int argc, char** argv) {
     test_runs();
     test_header_signatures();
     test_struct_layout();
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(RX_ALLOW_IMAGE_FILES)
     std::string dir = RX_FIXTURE_DIR;
+    std::string tmp = "/tmp";
+#ifdef _WIN32
+    if (const char* t = std::getenv("TEMP")) tmp = t;
+#endif
     std::string img = dir + "/ntfs_basic.img", manifest = dir + "/ntfs_basic.manifest.tsv";
     { std::ifstream t(img, std::ios::binary); if (!t.good()) { std::printf("fixture image not found: %s\n", img.c_str()); return 2; } }
     test_real_ntfs_volume(img, manifest);
     test_cancellation(img);
-    test_bad_volumes("/tmp");
-    test_truncated_image(img, "/tmp");
-    test_fuzz(img, "/tmp", fuzz_iters);
+    test_bad_volumes(tmp);
+    test_truncated_image(img, tmp);
+    test_fuzz(img, tmp, fuzz_iters);
 #endif
     std::printf("%d checks, %d failed\n", g_run, g_failed);
     return g_failed == 0 ? 0 : 1;

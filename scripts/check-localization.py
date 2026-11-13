@@ -30,7 +30,7 @@ for k, where in sorted(used):
     if k not in base: problems.append("missing key '%s' (used in %s)" % (k, where))
 
 dynamic = ["Cat_" + c for c in ("Photos", "Videos", "Documents", "Audio", "Archives", "Other")]
-dynamic += ["ScanType_" + t for t in ("Quick", "Deep")]
+dynamic += ["ScanType_" + t for t in ("Quick", "Deep", "Snapshot")]
 dynamic += ["Status_" + s for s in ("Completed", "Cancelled", "Failed", "Interrupted", "Running", "Verified", "Unverified", "Suspect")]
 # keys returned by DriveClassifier
 cls = open(os.path.join(root, "src", "RecoverX.Core", "Services", "DriveClassifier.cs"), encoding="utf-8").read()

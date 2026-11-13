@@ -14,6 +14,7 @@ namespace RecoverX.Desktop.ViewModels
         public DrivesViewModel Drives { get; }
         public HistoryViewModel History { get; }
         public ICommand QuickScanCommand { get; }
+        public ICommand DeepScanCommand { get; }
         public string[] SupportedFileSystems { get; } = { "NTFS", "FAT32", "exFAT" };
         public string[] SafetyTips { get; }
         public long RecoveredCount { get { return _recoveredCount; } private set { SetProperty(ref _recoveredCount, value); } }
@@ -24,6 +25,7 @@ namespace RecoverX.Desktop.ViewModels
             History = history;
             _recovered = recovered;
             QuickScanCommand = new RelayCommand(_ => launcher.RequestPicker());
+            DeepScanCommand = new RelayCommand(_ => launcher.RequestPicker());   // both scans start from a drive card
             SafetyTips = new[] { l.Get("Tip_1"), l.Get("Tip_2"), l.Get("Tip_3"), l.Get("Tip_4"), l.Get("Tip_5") };
             var ignored = RefreshAsync();
         }

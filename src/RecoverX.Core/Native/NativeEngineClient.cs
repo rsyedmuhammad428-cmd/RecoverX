@@ -70,7 +70,10 @@ namespace RecoverX.Core.Native
                 || NativeMethods.rx_sizeof_probe_result() != (uint)Marshal.SizeOf(typeof(RxProbeResult))
                 || NativeMethods3.rx_sizeof_file_entry() != (uint)Marshal.SizeOf(typeof(RxFileEntry))
                 || NativeMethods3.rx_sizeof_scan_progress() != (uint)Marshal.SizeOf(typeof(RxScanProgress))
-                || NativeMethods3.rx_sizeof_scan_options() != (uint)Marshal.SizeOf(typeof(RxScanOptions)))
+                || NativeMethods3.rx_sizeof_scan_options() != (uint)Marshal.SizeOf(typeof(RxScanOptions))
+                || NativeMethods4.rx_sizeof_carve_entry() != (uint)Marshal.SizeOf(typeof(RxCarveEntry))
+                || NativeMethods4.rx_sizeof_carve_progress() != (uint)Marshal.SizeOf(typeof(RxCarveProgress))
+                || NativeMethods4.rx_sizeof_carve_options() != (uint)Marshal.SizeOf(typeof(RxCarveOptions)))
             { _reason = "Struct layout mismatch between engine and managed code"; _log.Warn(_reason); return; }
 
             _version = Marshal.PtrToStringUni(NativeMethods.rx_get_version_string()) ?? string.Empty;
@@ -142,22 +145,66 @@ namespace RecoverX.Core.Native
             catch (Exception ex) when (IsInterop(ex)) { throw Wrap(ex); }
         }
 
-        public NtfsScanOpenResult OpenNtfsScan(string root, ScanOptions options)
+        public ScanOpenResult OpenNtfsScan(string root, ScanOptions options)
         {
-            if (!IsAvailable) return new NtfsScanOpenResult { Status = EngineStatus.Unavailable, Detail = _reason };
+            if (!IsAvailable) return new ScanOpenResult { Status = EngineStatus.Unavailable, Detail = _reason };
             try
             {
                 var o = new RxScanOptions { StructSize = (uint)Marshal.SizeOf(typeof(RxScanOptions)), Flags = options.ValidateContent ? 1u : 0u, MaxResults = (uint)Math.Max(0, options.MaxResults) };
                 IntPtr h;
                 int st = NativeMethods3.rx_ntfs_scan_create(NormalizeRoot(root), ref o, out h);
                 var status = Enum.IsDefined(typeof(EngineStatus), st) ? (EngineStatus)st : EngineStatus.Internal;
-                if (status != EngineStatus.Ok) return new NtfsScanOpenResult { Status = status, Detail = "rx_ntfs_scan_create returned " + st };
-                return new NtfsScanOpenResult { Status = EngineStatus.Ok, Session = new NativeNtfsScanSession(h) };
+                if (status != EngineStatus.Ok) return new ScanOpenResult { Status = status, Detail = "rx_ntfs_scan_create returned " + st };
+                return new ScanOpenResult { Status = EngineStatus.Ok, Session = new NativeQuickScanSession(h, QuickScanApi.Ntfs) };
             }
             catch (Exception ex) when (IsInterop(ex))
             {
                 _log.Error("Native engine call failed", ex);
-                return new NtfsScanOpenResult { Status = EngineStatus.Internal, Detail = ex.Message };
+                return new ScanOpenResult { Status = EngineStatus.Internal, Detail = ex.Message };
+            }
+        }
+
+        public ScanOpenResult OpenFatScan(string root, ScanOptions options)
+        {
+            if (!IsAvailable) return new ScanOpenResult { Status = EngineStatus.Unavailable, Detail = _reason };
+            try
+            {
+                var o = new RxScanOptions { StructSize = (uint)Marshal.SizeOf(typeof(RxScanOptions)), Flags = options.ValidateContent ? 1u : 0u, MaxResults = (uint)Math.Max(0, options.MaxResults) };
+                IntPtr h;
+                int st = NativeMethods5.rx_fat_scan_create(NormalizeRoot(root), ref o, out h);
+                var status = Enum.IsDefined(typeof(EngineStatus), st) ? (EngineStatus)st : EngineStatus.Internal;
+                if (status != EngineStatus.Ok) return new ScanOpenResult { Status = status, Detail = "rx_fat_scan_create returned " + st };
+                return new ScanOpenResult { Status = EngineStatus.Ok, Session = new NativeQuickScanSession(h, QuickScanApi.Fat) };
+            }
+            catch (Exception ex) when (IsInterop(ex))
+            {
+                _log.Error("Native engine call failed", ex);
+                return new ScanOpenResult { Status = EngineStatus.Internal, Detail = ex.Message };
+            }
+        }
+
+        public ScanOpenResult OpenDeepScan(string root, DeepScanOptions options)
+        {
+            if (!IsAvailable) return new ScanOpenResult { Status = EngineStatus.Unavailable, Detail = _reason };
+            try
+            {
+                var o = new RxCarveOptions
+                {
+                    StructSize = (uint)Marshal.SizeOf(typeof(RxCarveOptions)),
+                    Flags = options != null && options.IncludeUsedSpace ? NativeMethods4.CarveAllSpace : 0u,
+                    TypeMask = 0,
+                    MaxResults = (uint)Math.Max(0, options == null ? 0 : options.MaxResults)
+                };
+                IntPtr h;
+                int st = NativeMethods4.rx_carve_create(NormalizeRoot(root), ref o, out h);
+                var status = Enum.IsDefined(typeof(EngineStatus), st) ? (EngineStatus)st : EngineStatus.Internal;
+                if (status != EngineStatus.Ok) return new ScanOpenResult { Status = status, Detail = "rx_carve_create returned " + st };
+                return new ScanOpenResult { Status = EngineStatus.Ok, Session = new NativeDeepScanSession(h) };
+            }
+            catch (Exception ex) when (IsInterop(ex))
+            {
+                _log.Error("Native engine call failed", ex);
+                return new ScanOpenResult { Status = EngineStatus.Internal, Detail = ex.Message };
             }
         }
 

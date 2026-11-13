@@ -44,6 +44,8 @@ RxStatus platform_read_aligned(PlatformVolume* v, uint64_t offset, void* buf, ui
     return RX_OK;
 }
 
+uint64_t platform_local_to_utc(uint64_t ft) { return ft; }   // non-Windows test hosts: treat FAT times as UTC
+
 bool platform_dest_info(const std::wstring&, std::wstring&, bool&) { return false; }
 
 } // namespace rx

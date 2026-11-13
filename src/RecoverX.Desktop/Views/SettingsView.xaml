@@ -30,6 +30,9 @@
                         <RadioButton GroupName="scantype" Content="{loc:Loc ScanType_Quick}" IsChecked="{Binding IsQuickDefault, Mode=TwoWay}" Margin="0,0,16,0"/>
                         <RadioButton GroupName="scantype" Content="{loc:Loc ScanType_Deep}" IsChecked="{Binding IsDeepDefault, Mode=TwoWay}"/>
                     </StackPanel>
+                    <TextBlock Text="{loc:Loc Set_ScanType_Note}" Style="{StaticResource Muted}" Margin="0,0,0,10"/>
+                    <CheckBox Content="{loc:Loc Set_DeepAllSpace}" IsChecked="{Binding DeepScanIncludeUsedSpace}" Margin="0,0,0,2"/>
+                    <TextBlock Text="{loc:Loc Set_DeepAllSpace_Note}" Style="{StaticResource Muted}" Margin="20,0,0,10"/>
                     <TextBlock Text="{loc:Loc Set_MinFileSize}"/>
                     <TextBox Text="{Binding MinFileSizeText, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Input}" Width="140" HorizontalAlignment="Left" Margin="0,4,0,10"/>
 

@@ -71,6 +71,8 @@ namespace RecoverX.Desktop.ViewModels
         public string Destination { get { return _destination; } set { SetProperty(ref _destination, value); } }
         public string MinFileSizeText { get { return _minSizeText; } set { SetProperty(ref _minSizeText, value); } }
         public bool PreviewEnabled { get { return _previewEnabled; } set { SetProperty(ref _previewEnabled, value); } }
+        public bool DeepScanIncludeUsedSpace { get { return _deepAllSpace; } set { SetProperty(ref _deepAllSpace, value); } }
+        private bool _deepAllSpace;
         public string PreviewMaxText { get { return _previewMaxText; } set { SetProperty(ref _previewMaxText, value); } }
         public string HistoryMaxText { get { return _historyMaxText; } set { SetProperty(ref _historyMaxText, value); } }
 
@@ -90,6 +92,7 @@ namespace RecoverX.Desktop.ViewModels
             _destination = _current.DefaultRecoveryDestination;
             _minSizeText = _current.MinFileSizeKb.ToString(CultureInfo.InvariantCulture);
             _previewEnabled = _current.PreviewEnabled;
+            _deepAllSpace = _current.DeepScanIncludeUsedSpace;
             _previewMaxText = _current.PreviewMaxSizeMb.ToString(CultureInfo.InvariantCulture);
             _historyMaxText = _current.HistoryMaxEntries.ToString(CultureInfo.InvariantCulture);
 
@@ -171,6 +174,7 @@ namespace RecoverX.Desktop.ViewModels
 
             _current.MinFileSizeKb = minKb;
             _current.PreviewEnabled = PreviewEnabled;
+            _current.DeepScanIncludeUsedSpace = DeepScanIncludeUsedSpace;
             _current.PreviewMaxSizeMb = prevMb;
             _current.HistoryMaxEntries = histMax;
             if (!Persist(m => PreferencesMessage = m)) return;

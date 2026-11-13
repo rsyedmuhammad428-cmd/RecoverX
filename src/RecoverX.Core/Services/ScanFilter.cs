@@ -27,9 +27,53 @@ namespace RecoverX.Core.Services
         }
     }
 
-    /// <summary>Maps conditions to resource keys; the UI localizes them.</summary>
+    /// <summary>Maps conditions to ratings and resource keys; the UI localizes them.</summary>
     public static class ConditionInfo
     {
+        /// <summary>
+        /// Evidence-based condition -> the three user-facing ratings. VERIFIED and LIKELY both mean "no sign of damage was
+        /// found" (the detail text says whether the structure could be verified); PARTIAL = some data overwritten/broken;
+        /// LOST = overwritten or unusable. Unsupported, empty and unknown files are not rated as recoverable.
+        /// </summary>
+        public static RecoveryRating Rating(RecoveryCondition c)
+        {
+            switch (c)
+            {
+                case RecoveryCondition.Verified:
+                case RecoveryCondition.Likely: return RecoveryRating.Excellent;
+                case RecoveryCondition.Partial: return RecoveryRating.Partial;
+                case RecoveryCondition.Lost: return RecoveryRating.Poor;
+                default: return RecoveryRating.NotRecoverable;
+            }
+        }
+
+        public static string RatingKey(RecoveryRating r)
+        {
+            switch (r)
+            {
+                case RecoveryRating.Excellent: return "Rating_Excellent";
+                case RecoveryRating.Partial: return "Rating_Partial";
+                case RecoveryRating.Poor: return "Rating_Poor";
+                default: return "Rating_NotRecoverable";
+            }
+        }
+
+        public const string SnapshotTipKey = "Snap_Tip";
+
+        /// <summary>Detail key for a Deep Scan result, describing what was actually verified.</summary>
+        public static string CarvedTipKey(ScanEntry e)
+        {
+            if ((e.Evidence & CarveEvidence.InUse) != 0 && e.Condition == RecoveryCondition.Verified) return "CarveTip_InUseChecksum";
+            if ((e.Evidence & CarveEvidence.InUse) != 0) return "CarveTip_InUse";
+            switch (e.Condition)
+            {
+                case RecoveryCondition.Verified: return (e.Evidence & CarveEvidence.ChecksumOk) != 0 ? "CarveTip_Checksum" : "CarveTip_Verified";
+                case RecoveryCondition.Likely: return "CarveTip_Likely";
+                case RecoveryCondition.Partial: return (e.Evidence & CarveEvidence.Truncated) != 0 ? "CarveTip_Truncated" : "CarveTip_Partial";
+                default: return "CarveTip_Lost";
+            }
+        }
+
         public static string Key(RecoveryCondition c)
         {
             switch (c)

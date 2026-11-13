@@ -32,6 +32,7 @@ namespace RecoverX.Database
             if (values.TryGetValue("default_destination", out v)) s.DefaultRecoveryDestination = v;
             if (values.TryGetValue("scan_type_default", out v)) s.DefaultScanType = v;
             if (values.TryGetValue("min_file_size_kb", out v)) s.MinFileSizeKb = ParseInt(v, s.MinFileSizeKb);
+            if (values.TryGetValue("deep_scan_all_space", out v)) s.DeepScanIncludeUsedSpace = v == "1";
             if (values.TryGetValue("preview_enabled", out v)) s.PreviewEnabled = v == "1";
             if (values.TryGetValue("preview_max_mb", out v)) s.PreviewMaxSizeMb = ParseInt(v, s.PreviewMaxSizeMb);
             if (values.TryGetValue("history_max_entries", out v)) s.HistoryMaxEntries = ParseInt(v, s.HistoryMaxEntries);
@@ -50,6 +51,7 @@ namespace RecoverX.Database
                 Upsert(c, "default_destination", settings.DefaultRecoveryDestination);
                 Upsert(c, "scan_type_default", settings.DefaultScanType);
                 Upsert(c, "min_file_size_kb", settings.MinFileSizeKb.ToString(CultureInfo.InvariantCulture));
+                Upsert(c, "deep_scan_all_space", settings.DeepScanIncludeUsedSpace ? "1" : "0");
                 Upsert(c, "preview_enabled", settings.PreviewEnabled ? "1" : "0");
                 Upsert(c, "preview_max_mb", settings.PreviewMaxSizeMb.ToString(CultureInfo.InvariantCulture));
                 Upsert(c, "history_max_entries", settings.HistoryMaxEntries.ToString(CultureInfo.InvariantCulture));

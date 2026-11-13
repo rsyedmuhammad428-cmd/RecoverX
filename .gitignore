@@ -1,0 +1,15 @@
+# Build outputs
+bin/
+obj/
+build/
+native-bin/
+out/
+installer/output/
+*.log
+TestResults/
+
+# IDE
+.vs/
+*.user
+*.suo
+installer/stage/

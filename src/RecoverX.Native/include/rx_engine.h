@@ -1,5 +1,5 @@
 /*
- * RecoverX native engine - public C ABI (version 1).
+ * RecoverX native engine - public C ABI (version 3: adds FAT12/16/32 and exFAT Quick Scan; v2 added Deep Scan and pause/resume).
  *
  * Design rules
  *  - Plain C types only; no C++ exceptions cross this boundary (every call is wrapped, failures become RxStatus).
@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#define RX_ABI_VERSION 1u
+#define RX_ABI_VERSION 3u
 
 typedef int32_t RxStatus;
 enum {
@@ -43,7 +43,8 @@ enum {
     RX_ERR_UNSUPPORTED = 6,        /* e.g. engine built for a non-Windows host */
     RX_ERR_CANCELLED = 7,
     RX_ERR_NOT_NTFS = 8,           /* boot sector is not NTFS */
-    RX_ERR_CORRUPT = 9,            /* NTFS metadata is damaged beyond use */
+    RX_ERR_CORRUPT = 9,            /* file-system metadata is damaged beyond use */
+    RX_ERR_NOT_FAT = 10,           /* boot sector is not FAT12/16/32 or exFAT (ABI 3) */
     RX_ERR_INTERNAL = 99
 };
 
@@ -134,6 +135,9 @@ RX_API RxCancelHandle rx_cancel_create(void);
 RX_API void           rx_cancel_request(RxCancelHandle token);
 RX_API int32_t        rx_cancel_is_requested(RxCancelHandle token);
 RX_API void           rx_cancel_destroy(RxCancelHandle token);
+/* Pause/resume (ABI 2). A paused operation blocks at its next check point until resumed or cancelled. */
+RX_API void           rx_cancel_set_paused(RxCancelHandle token, int32_t paused);
+RX_API int32_t        rx_cancel_is_paused(RxCancelHandle token);
 
 RX_API uint32_t rx_last_native_error(void);   /* thread-local Win32 error of the last failing call */
 
@@ -156,7 +160,9 @@ enum {
 /* RxFileEntry.flags */
 enum {
     RX_ENT_RESIDENT = 1, RX_ENT_PATH_UNCERTAIN = 2, RX_ENT_COMPRESSED = 4, RX_ENT_ENCRYPTED = 8, RX_ENT_SPARSE = 16,
-    RX_ENT_ATTR_LIST = 32, RX_ENT_NAME_TRUNCATED = 64, RX_ENT_HAS_STREAMS = 128, RX_ENT_BAD_RUNS = 256
+    RX_ENT_ATTR_LIST = 32, RX_ENT_NAME_TRUNCATED = 64, RX_ENT_HAS_STREAMS = 128, RX_ENT_BAD_RUNS = 256,
+    RX_ENT_NAME_GUESSED = 512,     /* FAT: the first letter of a short 8.3 name is lost on deletion; shown as '_' */
+    RX_ENT_CHAIN_FOLLOWED = 1024   /* exFAT: data located through a FAT chain the deletion left intact */
 };
 
 /* RxScanOptions.flags */
@@ -164,7 +170,7 @@ enum { RX_SCANF_VALIDATE_CONTENT = 1 };
 
 /* RxScanProgress.phase / .flags */
 enum { RX_PHASE_OPENING = 1, RX_PHASE_SCANNING = 2, RX_PHASE_VALIDATING = 3, RX_PHASE_PATHS = 4, RX_PHASE_DONE = 5 };
-enum { RX_SCANP_TRUNCATED = 1, RX_SCANP_DONE = 2, RX_SCANP_BITMAP_UNAVAILABLE = 4, RX_SCANP_MFT_PARTIAL = 8 };
+enum { RX_SCANP_TRUNCATED = 1, RX_SCANP_DONE = 2, RX_SCANP_BITMAP_UNAVAILABLE = 4, RX_SCANP_MFT_PARTIAL = 8, RX_SCANP_PAUSED = 16 };
 
 typedef struct RxScanOptions {
     uint32_t struct_size;
@@ -223,6 +229,104 @@ RX_API void     rx_ntfs_scan_destroy(RxScanHandle scan);
 
 /* Checks whether `data` (the first bytes of a file) matches the file type implied by `name`'s extension. */
 RX_API RxStatus rx_check_header(const wchar_t* name, const uint8_t* data, uint32_t length, uint32_t* result);
+
+/* ---------------- Phase 4: Deep Scan - signature carving (read-only) ----------------
+ * Reads the volume sector by sector looking for the start of known file formats, then parses each candidate's own
+ * structure to find where it ends and how much of it checks out. Files are assumed to be stored contiguously:
+ * a fragmented file fails its structure checks and is reported as PARTIAL or LOST, never as VERIFIED.
+ * On NTFS, FAT12/16/32 and exFAT the scan covers only clusters the file system marks as free (unless RX_CARVEF_ALL_SPACE), so
+ * existing files are not reported; on unknown or damaged file systems the whole volume is read and results may include existing files.
+ */
+
+/* File types (RxCarveOptions.type_mask bit = 1 << type). */
+enum {
+    RX_FT_JPEG = 1, RX_FT_PNG = 2, RX_FT_GIF = 3, RX_FT_BMP = 4, RX_FT_PDF = 5, RX_FT_ZIP = 6, RX_FT_ISOBMFF = 7,
+    RX_FT_RIFF = 8, RX_FT_MP3 = 9, RX_FT_7Z = 10, RX_FT_EBML = 11, RX_FT_OLE2 = 12, RX_FT_COUNT = 13
+};
+
+/* RxCarveEntry.evidence: what was actually checked. */
+enum {
+    RX_EV_END_FOUND = 1,        /* the format's own end marker / length was found                        */
+    RX_EV_STRUCTURE_OK = 2,     /* every structure walked from header to end was consistent               */
+    RX_EV_CHECKSUM_OK = 4,      /* the format's checksums (PNG CRC, 7z CRC) matched                       */
+    RX_EV_TAIL_CONFIRMED = 8,   /* a structure near the end of the file was validated (not just the head) */
+    RX_EV_TRUNCATED = 16,       /* stopped at the size limit or the end of the volume                      */
+    RX_EV_CORRUPT = 32,         /* structure broke part-way; size is the part that checked out           */
+    RX_EV_IN_USE = 64,          /* some clusters of the extent are allocated to existing files            */
+    RX_EV_ALLOC_UNKNOWN = 128,  /* no allocation map: the data may belong to an existing file            */
+    RX_EV_TIME_LOCAL = 256      /* content_time is a wall-clock time without time zone (EXIF)             */
+};
+
+/* RxCarveOptions.flags */
+enum { RX_CARVEF_ALL_SPACE = 1 };
+
+typedef struct RxCarveOptions {
+    uint32_t struct_size;
+    uint32_t flags;            /* RX_CARVEF_* */
+    uint32_t type_mask;        /* bit (1 << RX_FT_x); 0 = all types */
+    uint32_t max_results;      /* 0 = default (250000); hard limit 5000000 */
+} RxCarveOptions;
+
+typedef struct RxCarveProgress {
+    uint32_t struct_size;
+    uint32_t phase;            /* RX_PHASE_OPENING / SCANNING / DONE */
+    uint32_t flags;            /* RX_SCANP_TRUNCATED / DONE / BITMAP_UNAVAILABLE / PAUSED */
+    uint32_t status;           /* final RxStatus once RX_SCANP_DONE is set */
+    uint64_t bytes_total;      /* bytes that will be examined (free space only on NTFS) */
+    uint64_t bytes_done;
+    uint32_t found;
+    uint32_t read_errors;      /* unreadable regions skipped */
+} RxCarveProgress;
+
+/* One file found by signature. Windows layout is 64 bytes. */
+typedef struct RxCarveEntry {
+    uint32_t struct_size;
+    uint32_t type;             /* RX_FT_* */
+    uint32_t condition;        /* RX_COND_* (VERIFIED / LIKELY / PARTIAL / LOST) */
+    uint32_t evidence;         /* RX_EV_* */
+    uint64_t offset;           /* byte offset of the file's first byte on the volume */
+    uint64_t size;             /* bytes that will be recovered */
+    uint64_t content_time;     /* FILETIME recorded inside the file (EXIF / MP4 header), 0 = unknown */
+    uint32_t clusters_total;   /* NTFS only: clusters covered by the extent */
+    uint32_t clusters_in_use;  /* NTFS only: of those, allocated to existing files */
+    wchar_t  ext[8];           /* file extension chosen from the content, e.g. "jpg", "docx" */
+} RxCarveEntry;
+
+typedef struct RxCarveScan* RxCarveHandle;
+
+RX_API uint32_t rx_sizeof_carve_entry(void);
+RX_API uint32_t rx_sizeof_carve_progress(void);
+RX_API uint32_t rx_sizeof_carve_options(void);
+
+/* Opens a drive read-only for Deep Scan. Works on any file system; uses the NTFS free-space map when available. */
+RX_API RxStatus rx_carve_create(const wchar_t* root, const RxCarveOptions* options, RxCarveHandle* scan);
+/* Blocking; cancellable and pausable through the token. Results found so far remain readable after cancellation. */
+RX_API RxStatus rx_carve_run(RxCarveHandle scan, RxCancelHandle cancel);
+RX_API RxStatus rx_carve_progress(RxCarveHandle scan, RxCarveProgress* progress);   /* thread-safe */
+RX_API uint32_t rx_carve_result_count(RxCarveHandle scan);
+RX_API RxStatus rx_carve_get_results(RxCarveHandle scan, uint32_t start, RxCarveEntry* out, uint32_t capacity, uint32_t* count);
+/* Reads the content of result `index` (relative offset). Read-only. */
+RX_API RxStatus rx_carve_read_file(RxCarveHandle scan, uint32_t index, uint64_t offset, void* buffer, uint32_t length, uint32_t* bytes_read);
+RX_API void     rx_carve_destroy(RxCarveHandle scan);
+
+/* ---------------- Phase 5: FAT12/16/32 and exFAT Quick Scan (read-only) ----------------
+ * Walks every directory (live and deleted) and reports deleted files with their names, folders, sizes and dates, using the same
+ * option / progress / result structures as the NTFS Quick Scan. RxFileEntry.mft_number holds the byte offset of the file's
+ * directory entry on the volume; record_changed is 0 (FAT keeps no change time).
+ * FAT12/16/32: a deleted file's cluster chain is cleared by the file system, so data is read contiguously from its first cluster;
+ *   clusters now allocated to other files are counted as evidence. The first letter of a short name is lost (RX_ENT_NAME_GUESSED)
+ *   unless a long name survives (checked with its checksum, which also restores that letter).
+ * exFAT: files flagged contiguous are located exactly; otherwise a FAT chain left intact is followed when it is consistent.
+ */
+typedef struct RxFatScan* RxFatScanHandle;
+RX_API RxStatus rx_fat_scan_create(const wchar_t* root, const RxScanOptions* options, RxFatScanHandle* scan);
+RX_API uint32_t rx_fat_scan_fs_type(RxFatScanHandle scan);   /* RX_FS_FAT12 / FAT16 / FAT32 / EXFAT */
+RX_API RxStatus rx_fat_scan_run(RxFatScanHandle scan, RxCancelHandle cancel);
+RX_API RxStatus rx_fat_scan_progress(RxFatScanHandle scan, RxScanProgress* progress);
+RX_API uint32_t rx_fat_scan_result_count(RxFatScanHandle scan);
+RX_API RxStatus rx_fat_scan_get_results(RxFatScanHandle scan, uint32_t start, RxFileEntry* out, uint32_t capacity, uint32_t* count);
+RX_API RxStatus rx_fat_scan_read_file(RxFatScanHandle scan, uint32_t index, uint64_t offset, void* buffer, uint32_t length, uint32_t* bytes_read);
+RX_API void     rx_fat_scan_destroy(RxFatScanHandle scan);
 
 #ifdef __cplusplus
 }

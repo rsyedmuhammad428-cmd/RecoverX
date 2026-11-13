@@ -3,4 +3,8 @@
     <RootNamespace>RecoverX.Core</RootNamespace>
     <AssemblyName>RecoverX.Core</AssemblyName>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- WMI (Win32_ShadowCopy) for restore-point recovery; part of .NET Framework -->
+    <Reference Include="System.Management" />
+  </ItemGroup>
 </Project>

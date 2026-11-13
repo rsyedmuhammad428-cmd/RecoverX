@@ -9,7 +9,7 @@ using RecoverX.Desktop.Services;
 
 namespace RecoverX.Desktop.ViewModels
 {
-    public sealed class DrivesViewModel : ViewModelBase
+    public sealed class DrivesViewModel : ViewModelBase, IRefreshable
     {
         private readonly IDriveService _drives;
         private readonly IEngineClient _engine;
@@ -18,6 +18,7 @@ namespace RecoverX.Desktop.ViewModels
         private readonly IElevationService _elevation;
         private readonly IAppLogger _log;
         private readonly IScanLauncher _launcher;
+        private readonly ISettingsService _settings;
         private bool _isBusy;
         private string _status = string.Empty;
 
@@ -26,6 +27,8 @@ namespace RecoverX.Desktop.ViewModels
         public ICommand VerifyAccessCommand { get; }
         public ICommand RestartAsAdminCommand { get; }
         public ICommand ScanCommand { get; }
+        public ICommand DeepScanCommand { get; }
+        public ICommand SnapshotCommand { get; }
 
         public bool IsBusy { get { return _isBusy; } private set { if (SetProperty(ref _isBusy, value)) OnPropertyChanged(nameof(HasNoDrives)); } }
         public string Status { get { return _status; } private set { SetProperty(ref _status, value); } }
@@ -33,14 +36,17 @@ namespace RecoverX.Desktop.ViewModels
         public bool ShowAdminBanner { get { return !_elevation.IsElevated; } }
 
         public DrivesViewModel(IDriveService drives, IEngineClient engine, ILocalizer l, IDialogService dialogs,
-                               IElevationService elevation, IScanLauncher launcher, IAppLogger log)
+                               IElevationService elevation, IScanLauncher launcher, ISettingsService settings, IAppLogger log)
         {
+            _settings = settings;
             _launcher = launcher;
             _drives = drives; _engine = engine; _l = l; _dialogs = dialogs; _elevation = elevation; _log = log;
             RefreshCommand = new RelayCommand(async _ => await RefreshAsync(), _ => !IsBusy);
             VerifyAccessCommand = new RelayCommand(async p => await VerifyAsync(p as DriveCardViewModel), p => p is DriveCardViewModel && !IsBusy);
             RestartAsAdminCommand = new RelayCommand(_ => RestartAsAdmin());
-            ScanCommand = new RelayCommand(p => _launcher.RequestScan(((DriveCardViewModel)p).Model), p => p is DriveCardViewModel && ((DriveCardViewModel)p).CanScan);
+            ScanCommand = new RelayCommand(p => _launcher.RequestScan(((DriveCardViewModel)p).Model, ScanMode.Quick), p => p is DriveCardViewModel && ((DriveCardViewModel)p).CanScan);
+            DeepScanCommand = new RelayCommand(p => _launcher.RequestScan(((DriveCardViewModel)p).Model, ScanMode.Deep), p => p is DriveCardViewModel && ((DriveCardViewModel)p).CanDeepScan);
+            SnapshotCommand = new RelayCommand(p => _launcher.RequestScan(((DriveCardViewModel)p).Model, ScanMode.PreviousVersions), p => p is DriveCardViewModel && ((DriveCardViewModel)p).CanSnapshot);
             var ignored = RefreshAsync();
         }
 
@@ -54,7 +60,9 @@ namespace RecoverX.Desktop.ViewModels
                 // Drive queries can block on slow removable media, so keep them off the UI thread.
                 var found = await Task.Run(() => _drives.GetDrives().ToList());
                 Drives.Clear();
-                foreach (var d in found) Drives.Add(new DriveCardViewModel(d, _l));
+                bool deepDefault = false;
+                try { deepDefault = _settings.Load().DefaultScanType == AppSettings.DeepScan; } catch (Exception ex) { _log.Warn("Settings unavailable: " + ex.Message); }
+                foreach (var d in found) Drives.Add(new DriveCardViewModel(d, _l, deepDefault));
                 Status = _l.Format("Drives_Count", found.Count);
             }
             catch (Exception ex)

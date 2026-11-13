@@ -49,7 +49,10 @@ namespace RecoverX.Desktop
                 services.AddSingleton<IEngineClient>(engine);
                 services.AddSingleton<IRecoveredFilesRepository, RecoveredFilesRepository>();
                 services.AddSingleton<IScanLauncher, ScanLauncher>();
-                services.AddSingleton<IQuickScanService, QuickScanService>();
+                services.AddSingleton<IShadowCopyService, ShadowCopyService>();
+                services.AddSingleton<IScanService>(sp => new ScanService(sp.GetRequiredService<IEngineClient>(), sp.GetRequiredService<IScanHistoryRepository>(),
+                    sp.GetRequiredService<IAppLogger>(), sp.GetRequiredService<IShadowCopyService>()));
+                services.AddSingleton<IPreviewService, PreviewService>();
                 services.AddSingleton<IRecoveryService, RecoveryService>();
                 services.AddSingleton<IDestinationValidator, DestinationValidator>();
                 // Phase 1 DriveInfo detection stays as the base; the engine only enriches it.

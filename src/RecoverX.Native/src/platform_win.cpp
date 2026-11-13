@@ -141,9 +141,20 @@ RxStatus platform_enumerate(std::vector<RxVolumeInfo>& out) {
     return RX_OK;
 }
 
+#ifdef RX_ALLOW_IMAGE_FILES
+// TEST BUILDS ONLY (native_tests / ntfs_tests / carve_tests): a disk-image file stands in for a volume so the engine can be
+// verified against real file-system images on Windows without administrator rights. The shipped DLL is built without
+// this define and accepts drive letters only.
+static RxStatus open_image(const std::wstring& path, PlatformVolume** vol);
+#endif
+
 RxStatus platform_open(const std::wstring& root, PlatformVolume** vol) {
     wchar_t letter;
+#ifdef RX_ALLOW_IMAGE_FILES
+    if (!parse_drive_letter(root, letter)) return open_image(root, vol);
+#else
     if (!parse_drive_letter(root, letter)) return RX_ERR_INVALID_ARG;
+#endif
     // Read-only: GENERIC_READ only, never GENERIC_WRITE. FILE_SHARE_WRITE is required because the volume is mounted.
     HANDLE h = CreateFileW(device_path(letter).c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (h == INVALID_HANDLE_VALUE) { DWORD e = GetLastError(); set_last_error(e); return map_error(e); }
@@ -164,6 +175,19 @@ RxStatus platform_open(const std::wstring& root, PlatformVolume** vol) {
     return RX_OK;
 }
 
+#ifdef RX_ALLOW_IMAGE_FILES
+static RxStatus open_image(const std::wstring& path, PlatformVolume** vol) {
+    HANDLE h = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+    if (h == INVALID_HANDLE_VALUE) { DWORD e = GetLastError(); set_last_error(e); return map_error(e); }
+    LARGE_INTEGER size;
+    if (!GetFileSizeEx(h, &size)) { DWORD e = GetLastError(); set_last_error(e); CloseHandle(h); return RX_ERR_IO; }
+    PlatformVolume* v = new PlatformVolume();
+    v->h = h; v->sector = 512; v->size = (uint64_t)size.QuadPart;
+    *vol = v;
+    return RX_OK;
+}
+#endif
+
 void platform_close(PlatformVolume* v) { if (v) { if (v->h != INVALID_HANDLE_VALUE) CloseHandle(v->h); delete v; } }
 uint32_t platform_sector_size(PlatformVolume* v) { return v->sector; }
 uint64_t platform_size(PlatformVolume* v) { return v->size; }
@@ -182,6 +206,14 @@ RxStatus platform_read_aligned(PlatformVolume* v, uint64_t offset, void* buf, ui
     }
     *got = total;
     return RX_OK;
+}
+
+uint64_t platform_local_to_utc(uint64_t ft) {
+    if (ft == 0) return 0;
+    FILETIME local, utc;
+    local.dwLowDateTime = (DWORD)ft; local.dwHighDateTime = (DWORD)(ft >> 32);
+    if (!LocalFileTimeToFileTime(&local, &utc)) return ft;
+    return ((uint64_t)utc.dwHighDateTime << 32) | utc.dwLowDateTime;
 }
 
 bool platform_dest_info(const std::wstring& path, std::wstring& volume_id, bool& exists_as_dir) {

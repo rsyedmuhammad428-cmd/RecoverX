@@ -17,5 +17,10 @@ if ($vs) { $cl = Get-ChildItem "$vs\VC\Tools\MSVC" -ErrorAction SilentlyContinue
 Report "MSVC C++ toolset (needed for the native engine)" ([bool]$cl) ""
 Report "Windows 10/11 SDK" (Test-Path "${env:ProgramFiles(x86)}\Windows Kits\10\Include") ""
 Report "CMake 3.15+" ([bool](Get-Command cmake -ErrorAction SilentlyContinue)) ""
+$tools = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "tools"
+$portable = (Test-Path (Join-Path $tools "mingw64/bin/g++.exe")) -and (Test-Path (Join-Path $tools "cmake/bin/cmake.exe")) -and (Test-Path (Join-Path $tools "dotnet/dotnet.exe"))
+Write-Host ""
+if ($portable) { Write-Host "[OK]      Portable toolchain in $tools (GCC + CMake + .NET SDK): scripts/build-all.ps1 works without Visual Studio." -ForegroundColor Green }
+else { Write-Host "[INFO]    No portable toolchain in $tools. Instead of Visual Studio you can run scripts/setup-portable-tools.ps1 (no admin rights needed)." }
 Report "Inno Setup 6 (needed from Phase 7)" (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe") ""
 if ($ok) { Write-Host "`nAll prerequisites found." } else { Write-Host "`nInstall the missing items above, then run scripts\build-all.ps1." }

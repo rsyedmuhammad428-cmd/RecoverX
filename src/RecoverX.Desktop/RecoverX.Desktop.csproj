@@ -5,6 +5,7 @@
     <RootNamespace>RecoverX.Desktop</RootNamespace>
     <AssemblyName>RecoverX.Desktop</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\installer\assets\RecoverX.ico</ApplicationIcon>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <!-- Satellite resource assemblies for other languages (e.g. Strings.ur.resx) are produced automatically. -->
@@ -15,6 +16,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
     <ProjectReference Include="..\RecoverX.Core\RecoverX.Core.csproj" />
     <ProjectReference Include="..\RecoverX.Database\RecoverX.Database.csproj" />
+    <!-- FolderBrowserDialog for choosing the recovery folder (part of .NET Framework; no extra dependency) -->
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <!-- Native engine DLLs built by scripts\build-native.ps1; copied next to the exe as x64\ and x86\ -->
   <ItemGroup>

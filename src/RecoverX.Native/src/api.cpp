@@ -1,9 +1,11 @@
 #include "internal.h"
 #include <atomic>
 #include <cstring>
+#include <chrono>
 #include <new>
+#include <thread>
 
-#define RX_VERSION_W L"0.2.0"
+#define RX_VERSION_W L"1.0.0"
 
 namespace {
 thread_local uint32_t t_last_error = 0;
@@ -13,10 +15,19 @@ const uint32_t kMaxRead = 16u * 1024u * 1024u;
 namespace rx {
 void set_last_error(uint32_t c) { t_last_error = c; }
 uint32_t get_last_error() { return t_last_error; }
+
+bool poll_cancel(RxCancelHandle t, std::atomic<uint32_t>* flags, uint32_t paused_flag) {
+    if (!t) return false;
+    if (t->paused.load() && !t->flag.load()) {
+        if (flags && paused_flag) flags->fetch_or(paused_flag);
+        while (t->paused.load() && !t->flag.load()) std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        if (flags && paused_flag) flags->fetch_and(~paused_flag);
+    }
+    return t->flag.load();
+}
 }
 
 struct RxVolume { rx::PlatformVolume* pv; uint32_t sector; uint64_t total; };
-struct RxCancelToken { std::atomic<bool> flag; RxCancelToken() : flag(false) {} };
 
 #define RX_GUARD_BEGIN try {
 #define RX_GUARD_END } catch (const std::bad_alloc&) { return RX_ERR_INTERNAL; } catch (...) { return RX_ERR_INTERNAL; }
@@ -176,6 +187,8 @@ RX_API RxStatus rx_validate_destination(const wchar_t* source_root, const wchar_
 
 RX_API RxCancelHandle rx_cancel_create(void) { try { return new RxCancelToken(); } catch (...) { return nullptr; } }
 RX_API void rx_cancel_request(RxCancelHandle t) { if (t) t->flag.store(true); }
+RX_API void rx_cancel_set_paused(RxCancelHandle t, int32_t paused) { if (t) t->paused.store(paused != 0); }
+RX_API int32_t rx_cancel_is_paused(RxCancelHandle t) { return (t && t->paused.load()) ? 1 : 0; }
 RX_API int32_t rx_cancel_is_requested(RxCancelHandle t) { return (t && t->flag.load()) ? 1 : 0; }
 RX_API void rx_cancel_destroy(RxCancelHandle t) { delete t; }
 
