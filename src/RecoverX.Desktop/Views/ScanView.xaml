@@ -46,7 +46,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="*" MinHeight="220"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
@@ -194,9 +194,16 @@
                 </Border>
             </Grid>
 
-            <!-- Recovery controls -->
+            
+            <!-- Results of the last recovery sit beside the controls so the card never grows taller
+                 and never squeezes the file list above it. -->
             <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,10,0,0">
-                <StackPanel>
+                <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" x:Name="RecoverControls">
                     <TextBlock Text="{Binding SelectedText}" FontWeight="SemiBold"/>
                     <TextBlock Text="{loc:Loc Scan_Destination}" Margin="0,8,0,2"/>
                     <Grid>
@@ -218,8 +225,14 @@
                         <ProgressBar Minimum="0" Maximum="1" Value="{Binding RecoveryProgress, Mode=OneWay}" Height="8" Margin="0,4,0,0"
                                      Foreground="{DynamicResource PrimaryBrush}" Background="{DynamicResource BorderBrushSoft}" BorderThickness="0"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding DoneText}" TextWrapping="Wrap" Margin="0,10,0,0" FontWeight="SemiBold" Visibility="{Binding HasDoneText, Converter={StaticResource BoolToVis}}"/>
-                    <ScrollViewer MaxHeight="130" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0" Visibility="{Binding HasOutcomes, Converter={StaticResource BoolToVis}}">
+                </StackPanel>
+                <Grid Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Top" Height="{Binding ActualHeight, ElementName=RecoverControls}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding DoneText}" TextWrapping="Wrap" Margin="0,0,0,0" FontWeight="SemiBold" Visibility="{Binding HasDoneText, Converter={StaticResource BoolToVis}}"/>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0" Visibility="{Binding HasOutcomes, Converter={StaticResource BoolToVis}}">
                         <ItemsControl ItemsSource="{Binding Outcomes}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -231,7 +244,8 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
-                </StackPanel>
+                </Grid>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

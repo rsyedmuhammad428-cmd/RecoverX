@@ -9,12 +9,12 @@
 - About 10 MB of disk space.
 
 ## Install
-1. Run `RecoverX-Setup-1.0.0.exe`.
+1. Run `RecoverX-Setup-1.0.1.exe`.
 2. Choose **Install for all users** (Program Files; needs administrator rights, recommended) or **Install for me only** (no admin rights).
 3. Read the **License Agreement** (MIT License) and choose **I accept the agreement**.
 4. Optionally tick **Create a desktop shortcut**.
 
-Silent install (IT deployment): `RecoverX-Setup-1.0.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART` (add `/CURRENTUSER` for a per-user
+Silent install (IT deployment): `RecoverX-Setup-1.0.1.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART` (add `/CURRENTUSER` for a per-user
 install, `/TASKS=desktopicon` for the shortcut, `/LOG=path` for a log).
 
 ## What gets installed

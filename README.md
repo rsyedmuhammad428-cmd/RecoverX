@@ -136,7 +136,7 @@ only ever **reads** the drive being recovered. It has no write API at all.
 
 ```
 RecoverX.sln                    Visual Studio / dotnet solution
-Directory.Build.props           Shared .NET settings: net48, C# 7.3, version 1.0.0, company/product
+Directory.Build.props           Shared .NET settings: net48, C# 7.3, version 1.0.1, company/product
 CMakeLists.txt                  Top-level CMake: engine + native tests (+ optional sanitizers)
 cmake/                          MinGW-w64 cross-compile toolchain files (x86_64, i686) for Linux hosts
 
@@ -337,14 +337,14 @@ decompression capped at 32 MB). Everything else gets a hex view. If the data is 
 - About 10 MB of disk space. No Visual C++ Redistributable is needed.
 
 **Install**
-1. Run `RecoverX-Setup-1.0.0.exe`.
+1. Run `RecoverX-Setup-1.0.1.exe`.
 2. Choose **Install for all users** (Program Files, needs admin, recommended) or **Install for me only**.
 3. Read the **License Agreement** (MIT) and choose **I accept the agreement**.
 4. Optionally tick **Create a desktop shortcut**.
 
 The license is also installed as `LICENSE.txt` in the program folder and linked from the Start Menu.
 
-Silent install: `RecoverX-Setup-1.0.0.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`. Add `/CURRENTUSER` for a per-user install,
+Silent install: `RecoverX-Setup-1.0.1.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`. Add `/CURRENTUSER` for a per-user install,
 `/TASKS=desktopicon` for the shortcut and `/LOG=path` for a log.
 
 **Uninstall:** Settings → Apps → RecoverX → Uninstall, or run `unins000.exe /VERYSILENT` in the install folder. Your
@@ -595,4 +595,4 @@ provided "as is", without warranty. In particular, data recovery is never guaran
 
 ---
 
-© 2026 RazaZaidi.AI — RecoverX 1.0.0. Recovery is never guaranteed. Always recover to a different drive.
+© 2026 RazaZaidi.AI — RecoverX 1.0.1. Recovery is never guaranteed. Always recover to a different drive.
